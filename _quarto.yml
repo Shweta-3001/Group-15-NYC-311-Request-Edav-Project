@@ -21,7 +21,7 @@ book:
   chapters:
     - index.qmd
     - data.qmd
-    - results.qmd
+    - results_hardik.qmd
     - conclusion.qmd
 
 format:
