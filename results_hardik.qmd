@@ -5,6 +5,9 @@ library(ggplot2)
 library(lubridate)
 library(stringr)
 library(tidyr)
+library(forcats)
+library(scales)
+library(tidytext)
 ``` 
 ## Which complaint types are most common in NYC?
 There were a unique total of 300 complaint types reported in the dataset. 
@@ -146,33 +149,116 @@ complaint_bucket_borough <- df_clean_final |>
     proportion = count / total_borough * 100
   ) |>
   ungroup()
+print(complaint_bucket_borough)
 ```
 
 ```{r}
-  ggplot(
-  complaint_bucket_borough,
-  aes(
-    x = proportion,
-    y = complaint_bucket,
-    fill = borough
-  )
-) +
-  geom_col() +
-  facet_wrap(~ borough, scales = "free_x") +
-  scale_x_continuous(labels = function(x) paste0(x / 1000, "k")) +
+# prepare plot data: percent label and reorder within each borough
+library(forcats)
+library(scales)
+library(tidytext)
+plot_df <- complaint_bucket_borough |>
+  mutate(prop_label = paste0(round(proportion, 1), "%"),
+         complaint_bucket = reorder_within(complaint_bucket, proportion, borough, fun = max))
+
+# Cleveland dot-plot showing proportion (%) and ordered by highest per borough
+ggplot(plot_df, aes(x = proportion, y = complaint_bucket)) +
+  geom_segment(aes(x = 0, xend = proportion, yend = complaint_bucket),
+               color = "gray80") +
+  geom_point(aes(color = borough), size = 2) +
+
+  facet_wrap(~ borough, scales = "free_y", ncol = 2) +
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
+  scale_y_reordered() +
+  scale_color_brewer(palette = "Set2") +
   theme_minimal() +
   theme(
     legend.position = "none",
-    strip.text = element_text(face = "bold", size = 11),
     axis.text.x = element_text(size = 7),
-    axis.text.y = element_text(size = 8)
+    axis.text.y = element_text(size = 8),
+    plot.margin = margin(5, 30, 5, 5) # room for labels
   ) +
-  scale_fill_brewer(palette = "Set2") +
   labs(
-    title = "Complaint Categories by Borough",
-    subtitle = "Counts of complaints across categories",
-    x = "Count",
+    title = "Complaint Categories by Borough (Cleveland dot plot)",
+    subtitle = "Proportion of complaints by category within each borough",
+    x = "Proportion (%)",
     y = "Complaint Category"
+  ) +
+  coord_cartesian(clip = "off")
+```
+## How does each year complaint evolve?
+```{r}
+# Prepare alluvial data
+df_viz <- df_clean_final %>%
+  mutate(
+    year = year(created_date),
+    month = floor_date(created_date, "month"),
+    status_clean = ifelse(status == "", NA, status)
+  )
+
+df_alluvial <- df_viz |>
+  filter(!is.na(status_clean)) |>
+  count(year, complaint_bucket, status_clean)
+
+# Alluvial Plot
+ggplot(
+  df_alluvial,
+  aes(
+    axis1 = year,
+    axis2 = complaint_bucket,
+    axis3 = status_clean,
+    y = n
+  )
+) +
+  geom_alluvium(aes(fill = complaint_bucket), width = 1/10, alpha = 0.8) +
+  geom_stratum(width = 1/10) +
+  geom_label(
+    stat = "stratum",
+    aes(label = after_stat(stratum)),
+    size = 3,
+    fill = "white"
+  ) +
+  scale_x_discrete(
+    limits = c("Year", "Complaint Type", "Status"),
+    expand = c(.05, .05)
+  ) +
+  labs(
+    title = "Complaint Flow: Year → Complaint Type → Final Status",
+    subtitle = "How complaints evolve from originating year to type to closure state",
+    y = "Number of Complaints",
+    x = ""
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold")
   )
 ```
+## How does each department perform in resolving complaints?
+```{r}
+dept_performance <- df_clean_final |>
+  group_by(agency_name, status) |>
+  summarise(count = n(), .groups = "drop") |>
+  group_by(agency_name) |>
+  mutate(
+    total_agency = sum(count),
+    proportion = count / total_agency * 100
+  ) |>
+  ungroup()
+# Stacked bar plot of department performance
+ggplot(dept_performance, aes(x = fct_reorder(agency_name, total_agency), y = proportion, fill = status)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Department Performance in Resolving Complaints",
+    x = "Agency",
+    y = "Proportion of Complaints (%)",
+    fill = "Status"
+  ) +
+  theme_minimal() +
+  theme( legend.position = "bottom" )
+``` 
+
 
