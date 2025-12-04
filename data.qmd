@@ -1,6 +1,86 @@
 # Data
 
 ## Description
-```{r}
-```
 ## Missing value analysis
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+```
+```{r}
+# combined=combined <- readRDS("nyc_311_data.rds")
+```
+```{r}
+missing_values_summary <- colSums(is.na(combined))
+missing_columns <- missing_values_summary[missing_values_summary > 0]
+missing_table <- data.frame(
+  Column = names(missing_columns),
+  MissingCount = as.numeric(missing_columns)
+)
+sorted_table <- missing_table |>
+arrange(desc(MissingCount))
+print(sorted_table)
+```
+```{r}
+miss_by_col_all <- combined |>
+  summarise(across(everything(), \(x) sum(is.na(x)))) |>
+  pivot_longer(everything(), names_to = "column", values_to = "missing_n") |>
+  mutate(total_n = nrow(combined),
+         missing_rate = missing_n / total_n) |>
+  dplyr::arrange(desc(missing_n))
+
+top_missing_rate <- miss_by_col_all |>
+slice_max(missing_rate, n = 25)
+
+ggplot(top_missing_rate, aes(x = reorder(column, missing_rate), y = missing_rate)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top columns by missingness rate (pre-selection)",
+    x = NULL,
+    y = "Missingness rate"
+  )
+
+missing_threshold <- 0.60
+cols_to_drop_by_missing <- miss_by_col_all |>
+  filter(missing_rate > missing_threshold) |>
+  pull(column)
+```
+The above horizontal bar graph gives a relative view of missing values in all the columns of the dataset. Missing values can, of course, complicate the analysis; however, in our case, the columns with a high number of missing values are not critical to our primary objectives. The data in these columns—such as taxi_company_borough, road_ramp,bridge_highway_direction, bridge_highway_name  bridge_highway_segment,taxi_pick_up_location,vehicle_type,facility_type as supporting information rather than core data required for analysis.
+
+For example, columns like bridge_highway_direction only provides metadata about the bridge highway, which is not directly related to analyzing 311 trends . Thus, we can safely drop these columns without significantly impacting our analysis.
+```{r}
+set.seed(42)
+sampled_data <- combined[sample(1:nrow(combined), 5000), ]
+
+missing_long <- as.data.frame(is.na(sampled_data)) |>
+  pivot_longer(cols = everything(), names_to = "Column", values_to = "IsMissing")
+
+missing_long <- cbind(RowIndex = rep(1:nrow(sampled_data), times = ncol(sampled_data)), missing_long)
+
+# Plotting heatmap of missing data
+ggplot(missing_long, aes(x = Column, y = RowIndex, fill = IsMissing)) +
+  geom_tile() +
+  scale_fill_manual(values = c("FALSE" = "white", "TRUE" = "red"), name = "Missing") +
+  labs(title = "Heatmap of Missing Data (Sampled Rows)",
+       x = "Columns",
+       y = "Row Index") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+The above missing value heatmap shows that missing data is concentrated only in certain columns. The rest of the columns have little to no missing data. This helps us streamline the data cleaning process.
+## Data Cleaning
+```{r}
+df_clean <- combined |>
+  dplyr::select(
+    unique_key, created_date, closed_date, resolution_action_updated_date,
+    agency, agency_name, complaint_type, descriptor, status,
+    borough, city, incident_zip, incident_address,
+    latitude, longitude, location_type,
+    open_data_channel_type,
+    resolution_description
+  )
+```
+
+
