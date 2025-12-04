@@ -28,5 +28,7 @@ format:
   html:
     theme: cosmo
     code-fold: true
+    fig-height: 8
+    fig-width: 10
 
 
