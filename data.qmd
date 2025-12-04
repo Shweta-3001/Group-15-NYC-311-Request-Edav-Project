@@ -43,8 +43,10 @@ library(stringr)
 # saveRDS(combined, "nyc_311_data.rds")
 ```
 ```{r}
-# combined=combined <- readRDS("nyc_311_data.rds")
+combined=combined <- readRDS("nyc_311_data.rds")
 ```
+
+
 ```{r}
 missing_values_summary <- colSums(is.na(combined))
 missing_columns <- missing_values_summary[missing_values_summary > 0]
@@ -56,6 +58,8 @@ sorted_table <- missing_table |>
 arrange(desc(MissingCount))
 print(sorted_table)
 ```
+
+
 ```{r}
 miss_by_col_all <- combined |>
   summarise(across(everything(), \(x) sum(is.na(x)))) |>
@@ -80,7 +84,7 @@ missing_threshold <- 0.60
 cols_to_drop_by_missing <- miss_by_col_all |>
   filter(missing_rate > missing_threshold) |>
   pull(column)
-print(cols_to_drop_by_missing)
+#print(cols_to_drop_by_missing)
 ```
 The above horizontal bar graph gives a relative view of missing values in all the columns of the dataset. Missing values can, of course, complicate the analysis; however, in our case, the columns with a high number of missing values are not critical to our primary objectives. The data in these columns—such as taxi_company_borough, road_ramp,bridge_highway_direction, bridge_highway_name  bridge_highway_segment,taxi_pick_up_location,vehicle_type,facility_type as supporting information rather than core data required for analysis.
 
@@ -105,20 +109,7 @@ ggplot(missing_long, aes(x = Column, y = RowIndex, fill = IsMissing)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 The above missing value heatmap shows that missing data is concentrated only in certain columns. The rest of the columns have little to no missing data. This helps us streamline the data cleaning process.
-```{r}
-# 2) drop rows missing critical fields 
-before_n <- nrow(combined)
-df_clean_final <- combined |>
-  filter(!is.na(created_date), !is.na(complaint_type), !is.na(borough))
-print(before_n - nrow(df_clean_final, ...)
-)
-# 3) drop rows with invalid resolution ordering (closed before created) but keep NA closed
-before_n <- nrow(df_clean_final)
-df_clean_final <- df_clean_final |>
-  filter(is.na(closed_date) | is.na(created_date) | closed_date >= created_date)
-cat("Dropped due to invalid time ordering:", before_n - nrow(df_clean_final), "\n")
 
-```
 
 ### Data Cleaning
 Based on our results above we have decided to remove following columns from our data-set as they are either not useful to us or have a lot of missing values.
@@ -136,5 +127,224 @@ df_clean <- combined |>
     resolution_description
   )
 ```
+
+```{r}
+combined0 <- combined |>
+  mutate(
+    across(where(is.character), \(x) str_squish(x)),
+    across(where(is.character), \(x) na_if(x, ""))
+  )
+
+miss_by_col_all <- combined0 |>
+  summarise(across(everything(), \(x) sum(is.na(x)))) |>
+  pivot_longer(everything(), names_to = "column", values_to = "missing_n") |>
+  mutate(total_n = nrow(combined0),
+         missing_rate = missing_n / total_n) |>
+  arrange(desc(missing_n))
+```
+
+```{r}
+uniq_by_col <- combined0 |>
+  summarise(across(where(is.character), \(x) n_distinct(x, na.rm = TRUE))) |>
+  pivot_longer(everything(), names_to = "column", values_to = "unique_n") |>
+  arrange(desc(unique_n))
+
+top_uniq <- uniq_by_col |>
+  slice_max(unique_n, n = 25)
+
+ggplot(top_uniq, aes(x = reorder(column, unique_n), y = unique_n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top character columns by number of unique values (pre-selection)",
+    x = NULL,
+    y = "Number of unique values"
+  )
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+library(lubridate)
+
+df0 <- df_clean |>
+  mutate(
+    across(where(is.character), \(x) str_squish(x)),
+    across(where(is.character), \(x) na_if(x, "")),
+    across(where(is.character), \(x) na_if(x, "NA")),
+    across(where(is.character), \(x) na_if(x, "N/A"))
+  )
+```
+
+
+```{r}
+library(redav)
+critical_cols <- c("location_type", "complaint_type", "borough")
+
+plot_missing(df0[critical_cols])
+
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# 1. Compute geolocation validity
+geo_check <- df0 |>
+  transmute(
+    latitude = suppressWarnings(as.numeric(latitude)),
+    longitude = suppressWarnings(as.numeric(longitude)),
+    geo_ok = !is.na(latitude) & !is.na(longitude) &
+      between(latitude, 40, 41.2) &
+      between(longitude, -74.5, -73.2)
+  )
+
+# 2. Prepare summary for % view
+geo_summary <- geo_check |>
+  count(geo_ok) |>
+  mutate(
+    label = ifelse(geo_ok, "Valid NYC Coordinates", "Invalid / Missing Coordinates"),
+    pct = n / sum(n)
+  )
+
+# 3. Plot
+ggplot(geo_summary, aes(x = label, y = pct, fill = label)) +
+  geom_col(width = 0.6, alpha = 0.85) +
+  geom_text(aes(label = percent(pct, accuracy = 0.1)),
+            vjust = -0.5, size = 5) +
+  scale_y_continuous(labels = percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = c("#1b9e77", "#d95f02")) +
+  labs(
+    title = "Geolocation Validity of 311 Records",
+    subtitle = "Latitude–longitude checked against the NYC bounding box",
+    x = NULL,
+    y = "% of Records",
+    fill = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold")
+  )
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+df_zip <- df_clean_final |>
+  mutate(
+    zip_num = suppressWarnings(as.numeric(incident_zip)),
+    zip_category = case_when(
+      is.na(zip_num) ~ "Missing ZIP",
+      zip_num >= 10000 & zip_num <= 11697 ~ "Valid NYC ZIP",
+      TRUE ~ "Invalid ZIP"
+    )
+  ) |>
+  count(zip_category) |>
+  mutate(
+    percent = n / sum(n),
+    label = paste0(comma(n), " (", percent_format(accuracy = 0.1)(percent), ")")
+  )
+
+ggplot(df_zip, aes(x = reorder(zip_category, -n), y = n, fill = zip_category)) +
+  geom_col(width = 0.6) +
+  
+  # FIX: always place labels *just above* bars safely
+  geom_text(
+    aes(label = label),
+    vjust = -0.8,   # pull upward slightly
+    size = 5,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_manual(values = c(
+    "Valid NYC ZIP" = "#1b9e77",
+    "Invalid ZIP"   = "#d95f02",
+    "Missing ZIP"   = "#7570b3"
+  )) +
+  
+  # FIX: expand limits so labels never get clipped or flipped
+  scale_y_continuous(
+    labels = comma,
+    expand = expansion(mult = c(0, 0.15))  # extra 15% space above
+  ) +
+  
+  labs(
+    title = "ZIP Code Quality Summary",
+    subtitle = "Distribution of valid, invalid, and missing ZIP codes",
+    x = NULL,
+    y = "Number of Records"
+  ) +
+  
+  theme_minimal(base_size = 15) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 13)
+  )
+
+df_clean <- df_clean_final %>%
+  mutate(
+    zip_num = suppressWarnings(as.numeric(incident_zip))
+  ) %>%
+  filter(
+    !is.na(zip_num),
+    zip_num >= 10000,
+    zip_num <= 11697
+  ) %>%
+  select(-zip_num)
+
+
+```
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+df_boro_dist <- df_clean_final %>%
+  count(borough) %>%
+  mutate(
+    percent = n / sum(n),
+    label = paste0(comma(n), "\n(", percent_format(accuracy = 0.1)(percent), ")")
+  )
+
+ggplot(df_boro_dist, aes(x = reorder(borough, -n), y = n, fill = borough)) +
+  geom_col(width = 0.7) +
+
+  # Label BELOW bar → absolutely zero overlap
+  geom_text(
+    aes(label = label),
+    vjust = 1.3,
+    size = 4,
+    color = "black"
+  ) +
+
+  scale_y_continuous(labels = comma) +
+  scale_fill_brewer(palette = "Set2") +
+
+  labs(
+    title = "Record Distribution Across NYC Boroughs",
+    subtitle = "After removing invalid or missing borough entries",
+    x = NULL,
+    y = "Number of Records"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold")
+  )
+df_clean_final <- df_clean_final %>% 
+  filter(borough %in% valid_boros)
+
+```
+
 
 
