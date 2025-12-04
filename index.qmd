@@ -1,1 +1,2 @@
 # Introduction
+New York City is a bustling metropolis with a diverse range of services and systems that keep the city running smoothly. However, with such complexity, residents may inevitably encounter issues that require government intervention. Data pertaining to the time, location, and content of thousands of 311 calls in New York City is recorded every day. By studying trends in this data, government agencies can respond more effectively to non-emergency requests and issues raised by the populations they serve

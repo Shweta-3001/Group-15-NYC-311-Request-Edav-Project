@@ -43,7 +43,7 @@ library(stringr)
 # saveRDS(combined, "nyc_311_data.rds")
 ```
 ```{r}
-# combined=combined <- readRDS("nyc_311_data.rds")
+combined=combined <- readRDS("nyc_311_data.rds")
 ```
 ```{r}
 missing_values_summary <- colSums(is.na(combined))
@@ -105,20 +105,6 @@ ggplot(missing_long, aes(x = Column, y = RowIndex, fill = IsMissing)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 The above missing value heatmap shows that missing data is concentrated only in certain columns. The rest of the columns have little to no missing data. This helps us streamline the data cleaning process.
-```{r}
-# 2) drop rows missing critical fields 
-before_n <- nrow(combined)
-df_clean_final <- combined |>
-  filter(!is.na(created_date), !is.na(complaint_type), !is.na(borough))
-print(before_n - nrow(df_clean_final, ...)
-)
-# 3) drop rows with invalid resolution ordering (closed before created) but keep NA closed
-before_n <- nrow(df_clean_final)
-df_clean_final <- df_clean_final |>
-  filter(is.na(closed_date) | is.na(created_date) | closed_date >= created_date)
-cat("Dropped due to invalid time ordering:", before_n - nrow(df_clean_final), "\n")
-
-```
 
 ### Data Cleaning
 Based on our results above we have decided to remove following columns from our data-set as they are either not useful to us or have a lot of missing values.
