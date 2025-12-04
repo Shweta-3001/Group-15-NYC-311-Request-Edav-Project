@@ -8,7 +8,7 @@ execute:
   message: false
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "NYC 311 Service Requests Analysis"
   author:
     - Shweta Tripathi (sst2166)
     - Hardik Saurabh Gupta (hg2770)
