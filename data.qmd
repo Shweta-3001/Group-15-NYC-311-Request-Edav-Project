@@ -7,6 +7,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(stringr)
+library(memoise)
 ```
 ```{r}
 # library(RSocrata)
@@ -80,7 +81,6 @@ missing_threshold <- 0.60
 cols_to_drop_by_missing <- miss_by_col_all |>
   filter(missing_rate > missing_threshold) |>
   pull(column)
-print(cols_to_drop_by_missing)
 ```
 The above horizontal bar graph gives a relative view of missing values in all the columns of the dataset. Missing values can, of course, complicate the analysis; however, in our case, the columns with a high number of missing values are not critical to our primary objectives. The data in these columns—such as taxi_company_borough, road_ramp,bridge_highway_direction, bridge_highway_name  bridge_highway_segment,taxi_pick_up_location,vehicle_type,facility_type as supporting information rather than core data required for analysis.
 
@@ -105,6 +105,26 @@ ggplot(missing_long, aes(x = Column, y = RowIndex, fill = IsMissing)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 The above missing value heatmap shows that missing data is concentrated only in certain columns. The rest of the columns have little to no missing data. This helps us streamline the data cleaning process.
+```{r}
+valid_boros <- c("MANHATTAN", "BROOKLYN", "QUEENS", "BRONX", "STATEN ISLAND")
+
+# ---- Diagnostic Plot: Borough counts ----
+ggplot(combined, aes(x = borough)) +
+  geom_bar(fill = "seagreen") +
+  labs(
+    title = "Borough Distribution of 311 Complaints",
+    x = "Borough",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+# Drop rows not in valid NYC borough list
+df_clean_final <- combined |>
+  filter(borough %in% valid_boros)
+
+unique(df_clean_final$borough)
+```
+
 
 ### Data Cleaning
 Based on our results above we have decided to remove following columns from our data-set as they are either not useful to us or have a lot of missing values.
@@ -112,7 +132,8 @@ Based on our results above we have decided to remove following columns from our 
 The columns that we are dropping:
 taxi_company_borough, road_ramp,bridge_highway_direction, bridge_highway_name, bridge_highway_segment,taxi_pick_up_location,vehicle_type,facility_type, due to high missing values and low relevance to our analysis.
 ```{r}
-df_clean <- combined |>
+#label
+df_clean_final <- df_clean_final |>
   dplyr::select(
     unique_key, created_date, closed_date, resolution_action_updated_date,
     agency, agency_name, complaint_type, descriptor, status,
@@ -121,6 +142,7 @@ df_clean <- combined |>
     open_data_channel_type,
     resolution_description
   )
+saveRDS(df_clean_final, "df_clean_final.rds")
 ```
 
 
