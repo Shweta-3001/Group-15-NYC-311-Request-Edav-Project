@@ -235,30 +235,46 @@ ggplot(
     axis.text.x = element_text(face = "bold")
   )
 ```
-## How does each department perform in resolving complaints?
+## What is the distribution of resolution times across agencies?
 ```{r}
-dept_performance <- df_clean_final |>
-  group_by(agency_name, status) |>
-  summarise(count = n(), .groups = "drop") |>
-  group_by(agency_name) |>
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Calculate resolution time
+df_clean <- df_clean_final |>
   mutate(
-    total_agency = sum(count),
-    proportion = count / total_agency * 100
+    created_date = as.POSIXct(created_date),
+    closed_date = as.POSIXct(closed_date),
+    resolution_time_days = as.numeric(difftime(closed_date, created_date, units = "days"))
   ) |>
-  ungroup()
-# Stacked bar plot of department performance
-ggplot(dept_performance, aes(x = fct_reorder(agency_name, total_agency), y = proportion, fill = status)) +
-  geom_bar(stat = "identity") +
+  filter(!is.na(resolution_time_days), resolution_time_days >= 0)
+
+# Top 15 agencies by complaint volume
+top_agencies <- df_clean |>
+  count(agency_name) |>
+  slice_max(n, n = 15) |>
+  pull(agency_name)
+
+# Boxplot: resolution time by agency
+df_clean |>
+  filter(agency_name %in% top_agencies) |>
+  mutate(agency_name = reorder(agency_name, resolution_time_days, FUN = median)) |>
+  ggplot(aes(x = agency_name, y = resolution_time_days)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.alpha = 0.3) +
   coord_flip() +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  scale_y_continuous(limits = c(0, quantile(df_clean$resolution_time_days, 0.95, na.rm = TRUE))) +
   labs(
-    title = "Department Performance in Resolving Complaints",
+    title = "Resolution Time Distribution by Agency (Top 15)",
+    subtitle = "Median, quartiles, and outliers shown",
     x = "Agency",
-    y = "Proportion of Complaints (%)",
-    fill = "Status"
+    y = "Resolution Time (Days)"
   ) +
-  theme_minimal() +
-  theme( legend.position = "bottom" )
-``` 
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold")
+  )
 
-
+```
+## 
