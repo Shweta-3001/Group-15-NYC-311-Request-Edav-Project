@@ -21,7 +21,7 @@ book:
   chapters:
     - index.qmd
     - data.qmd
-    - results_shweta.qmd
+    - results.qmd
     - conclusion.qmd
 format:
   html:
