@@ -21,18 +21,6 @@ library(scales)
 library(tidytext)
 ``` 
 
-###  Borough-level complaint patterns
-
-#### Borough × complaint bucket summary table
-
-We started our further interpretation by making borough–by–complaint-bucket (50 rows).  
-Each row combines:
-- a borough  
-- one of our merged **complaint buckets** (Noise Related, Vehicle and Parking, etc.)  
-- the **count** in that bucket  
-- and the **total** complaints for that borough.
-
-This table is the **numerical base layer** for the rest of the results.It lets us double-check that proportions later on come from sensible counts, and it makes clear that the comparisons are always “within borough”.
  
 ## Which complaint types are most common in NYC?
 There were a unique total of 300 complaint types reported in the dataset. 
@@ -177,7 +165,6 @@ complaint_bucket_borough <- df_clean_final |>
 print(complaint_bucket_borough)
 ```
 
-#### Cleveland dot plot: complaint categories by borough
 
 To see how concerns differ across boroughs, we turned these counts into
 **within-borough percentages** and plotted them as a **Cleveland dot plot**, faceted by
@@ -220,7 +207,6 @@ ggplot(plot_df, aes(x = proportion, y = complaint_bucket)) +
 - We choose Cleveland dot plot because with ~10 complaint buckets and 5 boroughs, a standard grouped bar chart would be wide
 and cluttered.  
 - A dot plot puts all categories on a shared horizontal scale (0–30%), which makes it easier to compare both **within** a borough and **across** boroughs.  
-- Faceting each borough into its own panel keeps labels readable.
 
 **What stands out**
 
@@ -228,131 +214,14 @@ and cluttered.
 - **Manhattan** is particularly noise-heavy, which matches expectations for a dense, mixed-use borough with late-night activity.
 - **Staten Island** shows relatively more *Street and Traffic Conditions* and *Vehicle and Parking* complaints, consistent with a more car-reliant area.  
 - Buckets like *Pests and Animals* or *Utilities and Power* appear as small but visible shares everywhere; the dot plot keeps them from disappearing into an “Other” bucket.
-
-### Complaint flow from year to closure status
-
-#### Alluvial diagram: Year → Complaint Type → Final Status
-
-Next we look at what happens *after* a complaint is created.  
-The alluvial (Sankey-style) diagram follows the volume of complaints from:
-
-> **Year (2023 vs 2024) → Complaint Type (bucket) → Final Status  
-> (Assigned, Closed, In Progress)**
-
-Each band’s thickness represents the number of complaints flowing along that path.
-
-
-```{r}
-library(ggalluvial)
-library(ggplot2)
-library(dplyr)
-library(scales)
-
-# Prepare alluvial data
-df_viz <- df_clean_final |>
-  mutate(
-    year = year(created_date),
-    month = floor_date(created_date, "month"),
-    status_clean = ifelse(status == "", NA, status)
-  )
-
-df_alluvial <- df_viz |>
-  filter(!is.na(status_clean)) |>
-  count(year, complaint_bucket, status_clean)
-
-# Alluvial Plot
-ggplot(
-  df_alluvial,
-  aes(
-    axis1 = year,
-    axis2 = complaint_bucket,
-    axis3 = status_clean,
-    y = n
-  )
-) +
-  geom_alluvium(aes(fill = complaint_bucket), width = 1/10, alpha = 0.8) +
-  geom_stratum(width = 1/10) +
-  geom_label(
-    stat = "stratum",
-    aes(label = after_stat(stratum)),
-    size = 3,
-    fill = "white"
-  ) +
-  scale_x_discrete(
-    limits = c("Year", "Complaint Type", "Status"),
-    expand = c(.05, .05)
-  ) +
-  labs(
-    title = "Complaint Flow: Year → Complaint Type → Final Status",
-    subtitle = "How complaints evolve from originating year to type to closure state",
-    y = "Number of Complaints",
-    x = ""
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(face = "bold"),
-    axis.text.x = element_text(face = "bold")
-  )
-```
-- We are interested in a **process**, not just separate counts: where do complaints go?  
-- A simple table of year × type × status would be hard to read; an alluvial diagram shows how volume splits and rejoins across stages.  
-- It visually emphasises **which types are more likely to end up stuck** in “Assigned” or “In Progress”.
-
-**Main patterns**
-
-- 2023 bands are thicker than 2024 simply because more months of 2023 are in the data.  
-- For most buckets, the majority of complaints eventually flow into **Closed**, but the share that remains **Assigned** or **In Progress** varies by type.  
-- Complaint buckets such as **Buildings and Housing** and **Sanitation and Waste** send a larger fraction of their volume into **Assigned** or **In Progress** compared to, say, **Noise** or **Vehicle and Parking**. That suggests more complex or slower workflows for physical-infrastructure issues.This plot gives a **big-picture map of the complaint lifecycle**, highlighting which categories tend to linger in the system.
-
-```{r}
-library(tidyverse)
-library(lubridate)
-library(scales)
-library(stringr)
-
-# Optional but recommended for big data speed:
-# library(data.table)
-
-theme_report <- function() {
-  theme_minimal(base_size = 13) +
-    theme(
-      legend.position = "bottom",
-      plot.title = element_text(face = "bold", size = 18),
-      plot.subtitle = element_text(size = 12),
-      axis.title = element_text(face = "bold"),
-      panel.grid.minor = element_blank()
-    )
-}
-
-df <- df_clean_final |>
-  mutate(
-    created_dt  = ymd_hms(created_date, quiet = TRUE, tz = "America/New_York"),
-    closed_dt   = ymd_hms(closed_date,  quiet = TRUE, tz = "America/New_York"),
-    updated_dt  = ymd_hms(resolution_action_updated_date, quiet = TRUE, tz = "America/New_York"),
-    date        = as_date(created_dt),
-    month       = floor_date(created_dt, "month"),
-    hour        = hour(created_dt),
-    wday        = wday(created_dt, label = TRUE, week_start = 1),
-
-    is_closed   = !is.na(closed_dt),
-    ttc_hours   = as.numeric(difftime(closed_dt, created_dt, units = "hours")),
-    ttc_days    = ttc_hours / 24,
-
-    has_geo     = !is.na(latitude) & !is.na(longitude)
-  ) |>
-  filter(!is.na(created_dt))
-
-
-```
-### 3.3 System stress: backlog over time
-
+##
 To quantify how “caught up” the city is, we approximated a **daily backlog**:
 
 > backlog(date) ≈ cumulative complaints created − cumulative complaints closed.
 
 We plotted this as an **area chart** over the full time window.
 
+## What is the backlog over time? is it growing or shrinking?
 ```{r backlog, fig.width=14, fig.height=7}
 library(dplyr)
 library(tidyr)
@@ -439,9 +308,7 @@ p_backlog
 
 
 ```
-- Backlog is a single time-series; we mainly care about its **trend and scale**.  
-- A filled area conveys the idea of “work piling up” better than a thin line, without
-extra visual complexity.
+
 
 **What the backlog curve tells us**
 
@@ -449,11 +316,122 @@ extra visual complexity.
 - There are short flat spots and small dips, but no long period where the city clearly catches up; by early 2025, the estimated backlog is near the 300k mark.  
 - This means that even if individual cases close in reasonable time, **new complaints** have been arriving faster than they are resolved , leaving a growing stock of open work. The backlog plot is our main evidence that the 311 system is **under sustained pressure** rather than just dealing with a one-off spike.
 
-### How people contact 311: channels by time of day
+## How do complaints progress through the system? which types get stuck?
 
-#### Faceted line plot: submission channels by shift
 
-We then turned to **how** people submit complaints: ONLINE, PHONE, MOBILE, and OTHER.For each time-of-day shift (Late Night, Morning, Afternoon, Evening), we calculated each channel’s **share of monthly complaints** and plotted these as **line charts in a 2×2 facet layout**.
+Next we look at what happens *after* a complaint is created.  
+The alluvial (Sankey-style) diagram follows the volume of complaints from:
+
+> **Year (2023 vs 2024) → Complaint Type (bucket) → Final Status  
+> (Assigned, Closed, In Progress)**
+
+Each band’s thickness represents the number of complaints flowing along that path.
+
+
+```{r}
+library(ggalluvial)
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Prepare alluvial data
+df_viz <- df_clean_final |>
+  mutate(
+    year = year(created_date),
+    month = floor_date(created_date, "month"),
+    status_clean = ifelse(status == "", NA, status)
+  )
+
+df_alluvial <- df_viz |>
+  filter(!is.na(status_clean)) |>
+  count(year, complaint_bucket, status_clean)
+
+# Alluvial Plot
+ggplot(
+  df_alluvial,
+  aes(
+    axis1 = year,
+    axis2 = complaint_bucket,
+    axis3 = status_clean,
+    y = n
+  )
+) +
+  geom_alluvium(aes(fill = complaint_bucket), width = 1/10, alpha = 0.8) +
+  geom_stratum(width = 1/10) +
+  geom_label(
+    stat = "stratum",
+    aes(label = after_stat(stratum)),
+    size = 3,
+    fill = "white"
+  ) +
+  scale_x_discrete(
+    limits = c("Year", "Complaint Type", "Status"),
+    expand = c(.05, .05)
+  ) +
+  labs(
+    title = "Complaint Flow: Year → Complaint Type → Final Status",
+    subtitle = "How complaints evolve from originating year to type to closure state",
+    y = "Number of Complaints",
+    x = ""
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold")
+  )
+```
+
+**Main patterns**
+
+- 2023 bands are thicker than 2024 simply because more months of 2023 are in the data.  
+- For most buckets, the majority of complaints eventually flow into **Closed**, but the share that remains **Assigned** or **In Progress** varies by type.  
+- Complaint buckets such as **Buildings and Housing** and **Sanitation and Waste** send a larger fraction of their volume into **Assigned** or **In Progress** compared to, say, **Noise** or **Vehicle and Parking**. That suggests more complex or slower workflows for physical-infrastructure issues.This plot gives a **big-picture map of the complaint lifecycle**, highlighting which categories tend to linger in the system.
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(stringr)
+
+# Optional but recommended for big data speed:
+# library(data.table)
+
+theme_report <- function() {
+  theme_minimal(base_size = 13) +
+    theme(
+      legend.position = "bottom",
+      plot.title = element_text(face = "bold", size = 18),
+      plot.subtitle = element_text(size = 12),
+      axis.title = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
+}
+
+df <- df_clean_final |>
+  mutate(
+    created_dt  = ymd_hms(created_date, quiet = TRUE, tz = "America/New_York"),
+    closed_dt   = ymd_hms(closed_date,  quiet = TRUE, tz = "America/New_York"),
+    updated_dt  = ymd_hms(resolution_action_updated_date, quiet = TRUE, tz = "America/New_York"),
+    date        = as_date(created_dt),
+    month       = floor_date(created_dt, "month"),
+    hour        = hour(created_dt),
+    wday        = wday(created_dt, label = TRUE, week_start = 1),
+
+    is_closed   = !is.na(closed_dt),
+    ttc_hours   = as.numeric(difftime(closed_dt, created_dt, units = "hours")),
+    ttc_days    = ttc_hours / 24,
+
+    has_geo     = !is.na(latitude) & !is.na(longitude)
+  ) |>
+  filter(!is.na(created_dt))
+
+
+```
+
+
+## How can people contact 311? which channel is preferred when?
+ How people submit complaints: ONLINE, PHONE, MOBILE, and OTHER.For each time-of-day shift (Late Night, Morning, Afternoon, Evening), we calculated each channel’s **share of monthly complaints** and plotted these as **line charts in a 2×2 facet layout**.
 
 ```{r, fig.width=14, fig.height=7}
 
@@ -560,11 +538,7 @@ p_shift_channel
 
 
 ```
-- Channel use changes over time *and* depends on time of day.  
-- Faceting by shift lets us keep a consistent y-axis and legend but separates patterns
-that would otherwise overlap.  
-- Using **shares instead of counts** means we are comparing composition, not total
-volume, which would be dominated by day-time hours.
+
 
 **Behavioural shifts we see**
 
@@ -580,7 +554,7 @@ Taken together, these lines point to a **slow but clear shift towards mobile rep
 especially outside office hours, which has implications for how interfaces and follow-up
 communication should be designed.
 
-### 3.5 Who handles what: interactive borough–type–agency “pair” plot
+##  Who handles what: interactive borough–type–agency “pair” plot
 
 To connect complaints to the agencies that act on them, we built an
 **interactive Sankey diagram** with four stages:
@@ -684,9 +658,8 @@ Instead of giving one fixed conclusion, this plot serves as a **navigation map f
 responsibility**: it lets a reader answer questions like *“Who usually deals with this
 type of complaint in my borough, and how does it tend to end?”*.
 
-### 3.6 Where problems occur and what gets done
+## 3.6 Where problems occur, and what type of complaints are occurring there?
 
-#### 3.6.1 Heatmap: complaint composition by location type
 
 We next asked **where** in the city the problems are happening.  
 We focused on the top location types (e.g., *RESIDENTIAL BUILDING*, *Street/Sidewalk*,
@@ -788,7 +761,7 @@ This figure supports simple, concrete statements such as:
 > “On streets and sidewalks, the story is mostly about parking and trash; inside homes,
 it’s about heat, water, and living conditions.”
 
-#### 3.6.2 Resolution actions by location type (faceted bar charts)
+#### Resolution actions by location type (faceted bar charts)
 
 We then looked at **what kind of action** is actually taken, and **where**.  
 We grouped individual resolution descriptions into a handful of broader **action types**
@@ -886,70 +859,6 @@ exactly where we’d expect inspectors to be dispatched.
 - **Work Completed** shows a mix of residential and street locations, highlighting where
 city crews most often finish tangible tasks.
 
-Together, these panels close the loop from **complaint location** to **typical outcome**.
-
-
-
-```{r label: timeline-by-bucket,fig-width: 10,fig-height: 6}
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-timeline <- df_clean_final |>
-  mutate(
-    created_date = as.Date(created_date),
-    action_date  = as.Date(resolution_action_updated_date),
-    closed_date  = as.Date(closed_date),
-    t_to_action       = as.numeric(difftime(action_date, created_date, units = "days")),
-    t_action_to_close = as.numeric(difftime(closed_date, action_date, units = "days"))
-  ) |>
-  filter(
-    !is.na(t_to_action),
-    !is.na(t_action_to_close),
-    t_to_action       >= 0,
-    t_action_to_close >= 0,
-    t_to_action       <= 60,
-    t_action_to_close <= 60
-  ) |>
-  group_by(complaint_bucket) |>
-  summarise(
-    median_to_action       = median(t_to_action),
-    median_action_to_close = median(t_action_to_close),
-    .groups = "drop"
-  ) |>
-  mutate(
-    total_median = median_to_action + median_action_to_close,
-    complaint_bucket = reorder(complaint_bucket, total_median)
-  )
-
-timeline_long <- timeline |>
-  select(complaint_bucket, median_to_action, median_action_to_close) |>
-  pivot_longer(
-    cols = c(median_to_action, median_action_to_close),
-    names_to = "phase",
-    values_to = "days"
-  )
-
-ggplot(timeline_long,
-       aes(x = complaint_bucket, y = days, fill = phase)) +
-  geom_col() +
-  coord_flip() +
-  scale_fill_manual(
-    values = c("median_to_action" = "#1b9e77",
-               "median_action_to_close" = "#7570b3"),
-    labels = c("Time to first action", "Time from action to closure"),
-    name = NULL
-  ) +
-  labs(
-    title = "Where Is Time Spent? Decomposing Complaint Lifecycles by Type",
-    subtitle = "Bars show median days; darker section is waiting for the first recorded action,\nlighter section is time from action to full closure (within 60-day window).",
-    x = "Complaint bucket",
-    y = "Median days"
-  ) +
-  theme_report()
-
-```
 
 
 

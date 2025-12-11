@@ -3,7 +3,7 @@
 
 New York City's 311 system is how, residents let the city know about issues in their communities, such as noise, heating problems, trash, and illegal parking etc. Each entry in the 311 data represents a moment when someone was concerned enough to reach out to the city for assistance.
 
-In this project, we analyze two years of NYC 311 complaint data to answer three main questions:
+In this project, we analyze two years of NYC 311 complaint data to answer questions about:
 
 1. **What are New Yorkers worried about?**  
    How do the types of complaints differ by **location** (e.g., borough, location type) and by **reporting channel** (phone, online, mobile)?
@@ -16,37 +16,9 @@ In this project, we analyze two years of NYC 311 complaint data to answer three 
 
 These questions guide the structure of the analysis and the choice of visualizations throughout the report.
 
-###  Data Source and Scope
+##  Data Source and Scope
 
 The raw data come from the NYC Open Data 311 service request API. To avoid time-outs and memory issues, we chose to download the data month-by-month, combined, and then saved as an `.rds` file for efficient reuse. In total, the working dataset contains **around 6M** over a two-year window, from early 2023 through late 2024.
-
-Each row corresponds to a single 311 complaint and includes the following groups of variables:
-
-#### Timestamps
-
-- `created_date`: when the complaint was submitted  
-- `closed_date`: when the complaint was closed (if ever)  
-- `resolution_action_updated_date`: when a resolution action was logged  
-
-#### Categorical Descriptors
-
-- `agency`, `agency_name`  
-- `complaint_type` and a higher-level `complaint_bucket` (custom grouping)  
-- `descriptor` (more detailed description of the issue)  
-- `status` (e.g., `"Closed"`, `"Assigned"`, `"In Progress"`)
-
-#### Location Information
-
-- `borough`, `incident_zip`, `incident_address`  
-- `location_type` (e.g., `"RESIDENTIAL BUILDING"`, `"Street/Sidewalk"`)  
-- `latitude`, `longitude`  
-
-#### Channel and Resolution
-
-- `open_data_channel_type` (e.g., `ONLINE`, `PHONE`, `MOBILE`, `OTHER`)  
-- `resolution_description` and `resolution_action` fields  
-
-Throughout the project, we created a cleaned version of the data stored in `df_clean_final`, which preserves key variables while dropping or recoding unusable columns.
 
 ```{r}
 library(dplyr)
@@ -93,9 +65,34 @@ library(memoise)
 combined=combined <- readRDS("nyc_311_data.rds")
 #combined=combined <- readRDS("nyc_311_data.rds")
 ```
+Each row corresponds to a single 311 complaint and includes the following groups of variables:
+
+### Timestamps
+
+- `created_date`: when the complaint was submitted  
+- `closed_date`: when the complaint was closed (if ever)  
+- `resolution_action_updated_date`: when a resolution action was logged  
+
+#### Categorical Descriptors
+
+- `agency`, `agency_name`  
+- `complaint_type` and a higher-level `complaint_bucket` (custom grouping)  
+- `descriptor` (more detailed description of the issue)  
+- `status` (e.g., `"Closed"`, `"Assigned"`, `"In Progress"`)
+
+#### Location Information
+
+- `borough`, `incident_zip`, `incident_address`  
+- `location_type` (e.g., `"RESIDENTIAL BUILDING"`, `"Street/Sidewalk"`)  
+- `latitude`, `longitude`  
+
+#### Channel and Resolution
+
+- `open_data_channel_type` (e.g., `ONLINE`, `PHONE`, `MOBILE`, `OTHER`)  
+- `resolution_description` and `resolution_action` fields  
 
 
-### Data Quality: Missingness Across Columns
+## Data Quality: Missingness Across Columns
 
 Before doing any substantive analysis, we examined the completeness of the raw 311 dataset. The goal of this step was to understand **which variables are reliable**, **which ones are mostly empty**, and **where cleaning or dropping variables is justified**.
 
@@ -112,7 +109,7 @@ arrange(desc(MissingCount))
 print(sorted_table)
 ```
 
-#### Top Columns by Missingness Rate
+**Top Columns by Missingness Rate**
 
 ```{r  missing-top25, fig.width=12, fig.height=8}
 
@@ -188,9 +185,9 @@ Key observations:
   `bridge_highway_segment`, and `taxi_pick_up_location`.
 - Many of these fields are highly specialized (e.g., taxi or bridge/highway metadata) that apply only to a very small subset of 311 requests.
 - A second tier of columns (e.g., `intersection_street_1`, `intersection_street_2`, `cross_street_1`, `cross_street_2`) has **moderate missingness** (roughly 25–40%), typically for records where complaints do not occur at an intersection.
-- We decided to remove **extreme missingness** columns from `df_clean_final`, which will add noise and complexity without contributing to the main objective of the project and columns with **moderate missingness** but high potential value were kept for further analysis.
+ We decided to remove **extreme missingness** columns from final dataframe, which will add noise and complexity without contributing to the main objective of the project and columns with **moderate missingness** but high potential value were kept for further analysis.
 
-#### Heatmap of Missing Data (Sampled Rows)
+**Heatmap of Missing Data (Sampled Rows)**
 
 ```{r heatmap fig-width: 12,fig-height: 8 }
 set.seed(42)
@@ -216,9 +213,9 @@ To complement the summary bar chart, we also visualized missingness **row by row
 - Other columns show **stripe-like patterns**, where only some rows are missing (e.g., `closed_date` for still-open complaints).
 - Core analytical fields such as `created_date`, `complaint_type`, and `borough` appear almost entirely white, confirming that they are reliable. 
 
-### Focusing on Key Categorical Variables
+## Focusing on Key Categorical Variables
 
-#### Borough Distribution of 311 Complaints
+**Borough Distribution of 311 Complaints**
 
 ```{r borough fig-width: 12,fig-height: 8 }
 library(dplyr)
@@ -280,8 +277,7 @@ ggplot(borough_counts,
   )
 
 ```
-
-Before diving into more detailed modeling, we summarized the **overall volume of complaints by borough**. The horizontal bar chart shows both the raw counts and the percentage share for each borough, ordered by frequency:
+ The horizontal bar chart shows both the raw counts and the percentage share for each borough, ordered by frequency:
 
 - **Brooklyn:** 2,047,219 complaints (30.7%)  
 - **Queens:** 1,604,444 complaints (24.0%)  
@@ -296,7 +292,7 @@ Interpretation:
 
 This plot acts as a **sanity check** that the dataset reflects known patterns of NYC population and service use and also it provides context for later plots that break down complaint types and system performance **within** each borough.
 
-#### Missingness Pattern for Core Categorical Variables
+**Missingness Pattern for Core Categorical Variables**
 
 ```{r}
 #label
@@ -362,7 +358,8 @@ The pattern plot has:
 - A bar on the right showing how common each pattern is.
 
 Main findings:
-- `borough` and `complaint_type` are essentially **complete**—almost no records are missing these fields.
+
+- `borough` and `complaint_type` are essentially **complete** almost no records are missing these fields.
 - `location_type` has a small but noticeable amount of missingness (around **10–15% of rows**). The plot shows two main patterns:  
   1. Complete cases (all three variables present).  
   2. Cases where only `location_type` is missing.
@@ -370,11 +367,11 @@ Main findings:
 - For analyses that depend heavily on `location_type` (e.g., location-type heatmaps and action distributions), we restrict to **complete cases** so that percentages are meaningful.
 - For other analyses, we kept `"Unknown"` or `NA` category for `location_type`, so that rows are not discarded unnecessarily.
 
-### Spatial Data Quality Checks
+## Spatial Data Quality Checks
 
 Many of the most interesting 311 questions are spatial (Which neighborhoods complain the most? Where are issues slowest to resolve?), so we checked the quality of the geographic fields before using them.
 
-#### Latitude–Longitude Validity
+**Latitude–Longitude Validity**
 
 ```{r ll fig-width: 12,fig-height: 8 }
 library(dplyr)
@@ -427,6 +424,7 @@ In the above plot we classified each record as:
 - having **invalid or missing coordinates** (outside the region or `NA`).
 
 The bar chart shows:
+
 - **98.5%** of records have valid latitude–longitude pairs.Only **1.5%** are invalid or missing.  
 - When making maps or location summaries, we'll only use the **valid coordinate subset**. This prevented us from plotting points that are clearly wrong (like locations outside of NYC or at (0, 0)).
 
@@ -502,7 +500,7 @@ df_clean <- df_clean_final %>%
 
 
 ```
-I performed a similar quality check for ZIP codes by comparing each `incident_zip` to a list of valid NYC ZIP codes and allowing for missing values. The bar chart summarizes counts and percentages:
+Performing a similar quality check for ZIP codes by comparing each `incident_zip` to a list of valid NYC ZIP codes and allowing for missing values. The bar chart summarizes counts and percentages:
 
 - **6,610,015 records (99.0%)** have a valid NYC ZIP code.  
 - **65,132 records (1.0%)** have missing ZIP codes.  
