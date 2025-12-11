@@ -1,1 +1,16 @@
+
 # Conclusion
+
+**Main Takeaways:** 311 complaints in NYC exhibit distinct patterns in terms of types, resolution times, and geographic distribution. Key complaint categories such as noise, sanitation, and infrastructure dominate the dataset, with significant variations in how quickly different types are addressed. The analysis highlights that certain complaint types tend to remain open longer, indicating potential areas for process improvement.
+
+
+**Limitations:** Our analysis focuses on data from a specific timeframe (2023-2024) and may not capture seasonal or long-term trends. Additionally, the dataset relies on self-reported complaints, which affects the quality and completeness of the information. 
+
+**Future Directions:** 
+Capture 5 years of data to analyze trends over time.
+Incoporate population density and demographic data to understand complaint patterns better.
+
+
+**Lessons Learned:** 
+Data cleaning and preprocessing are critical for accurate analysis, especially with large, real-world datasets.
+Geospatial enrichment adds valuable context to urban data, enhancing interpretability.

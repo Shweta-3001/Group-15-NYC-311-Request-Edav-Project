@@ -1,2 +1,19 @@
-# Introduction
-New York City is a bustling metropolis with a diverse range of services and systems that keep the city running smoothly. However, with such complexity, residents may inevitably encounter issues that require government intervention. Data pertaining to the time, location, and content of thousands of 311 calls in New York City is recorded every day. By studying trends in this data, government agencies can respond more effectively to non-emergency requests and issues raised by the populations they serve
+
+# 1. Introduction
+
+New York City is well-known for being a city that "never sleeps", and so is infrastructure that supports it with thousands of small service requests happen every single day, from streetlight repairs to waste removal, from housing complaints to traffic issues, being delivered to the people of New York. Millions of people use that shared provided infrastructure every day, so there is a high likelihood that something will go wrong, whether through maintenance or disruption, causing citizens to have to contact the City for resolution of the problem.
+
+The **311 service request** is the non-emergency lifeline for City residents to contact City agencies and allows them to create an ongoing record of what urban life is like.
+
+The goal of this project originates from one question we had: *What insights can we gain from analyzing the data from the 311 number?* Each call, every ticket generated, and updates to a previously generated ticket are attempts made by New Yorkers to fix or improve their neighbourhoods, and by analysing this set of data we aimed to find **why do citizens complain about certain things and how do agencies respond in a timely manner based on the geographic location of the complaint, the type of complaint?**
+
+To build this project, we started entirely from scratch using publicly available data from the **NYC Open Data Portal**. The process involved several key steps:
+- **Data cleaning and standardization:** fixing incorrect or missing timestamps, unifying complaint categories, and aligning inconsistent formats.  
+- **Feature engineering:** constructing new variables such as resolution time and service age.  
+- **Geospatial enrichment:** adding location-based context (boroughs, neighborhoods, and agencies) to enhance interpretability.
+
+Additionally, to better understand how the 311 system functions in practice, we registered a sample **noise complaint** ourselves through the city’s 311 platform. Observing the form, required fields, and follow-up process helped us interpret the dataset more intuitively—especially in understanding how each column (such as complaint type, agency, status, and timestamps) reflects real user inputs and system-generated updates.
+
+By the end of this project, the analysis paints a clear picture of how citizens interact with their city’s services. It shows that while most requests are handled promptly, some complaint types take longer due to structural, environmental, or jurisdictional factors. Through clear visuals and data-backed insights, this report demonstrates how open data can bridge the gap between public experience and government performance, turning millions of service calls into an evidence-based report of how New York truly runs.
+
+

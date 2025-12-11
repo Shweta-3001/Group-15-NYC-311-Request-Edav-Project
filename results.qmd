@@ -2,7 +2,7 @@
 ## Results
 
 This section walks through what we actually **see** in the 311 data.  
-Instead of repeating every statistic, we use a small set of plots where each one is meant
+Instead of repeating every statistic, we use set of plots where each one is meant
 to answer a specific question. For each figure, we describe:
 
 - the main pattern in plain language  
@@ -19,7 +19,67 @@ library(tidyr)
 library(forcats)
 library(scales)
 library(tidytext)
+library(ggalluvial)
+library(plotly)
+theme_report <- function(base_size = 13) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey90", linewidth = 0.3),
+      plot.title       = element_text(face = "bold", hjust = 0.5),
+      plot.subtitle    = element_text(hjust = 0.5, size = 11),
+      axis.title.x     = element_text(margin = margin(t = 8)),
+      axis.title.y     = element_text(margin = margin(r = 8)),
+      legend.title     = element_text(face = "bold"),
+      legend.position  = "right"
+    )
+}
+
 ``` 
+## How many complaints are received over time? which months are busiest?
+```{r fig.width=14, fig.height=7}
+df_clean_final <- readRDS("df_clean_final.rds")
+complaints <- df_clean_final |>
+  mutate(
+    year = year(created_date),
+    month = month(created_date, label = TRUE, abbr = TRUE),  # Jan, Feb, etc.
+    month_num = month(created_date),  # 1, 2, 3, etc.
+    year_month = floor_date(created_date, "month")  # First day of each month
+  )
+complaints_summary <- complaints |>
+  filter(!is.na(year)) |>    
+  group_by(year, month, month_num) |>
+  summarise(total_complaints = n(), .groups = "drop") |>
+  arrange(year, month_num)
+
+
+plot3 <- ggplot(complaints_summary, 
+                aes(x = month_num, y = total_complaints, 
+                    color = factor(year), group = year)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 1:12, labels = month.abb) +
+  scale_y_continuous(
+    limits = c(220000, 320000),
+    breaks = seq(220000, 320000, by = 10000),
+    labels = scales::comma
+  ) +
+  scale_color_brewer(palette = "Dark2", name = "Year") +
+  labs(
+    title = "Complaint Trends Across Months",
+    subtitle = "Monthly comparison of complaints in 2023 and 2024",
+    x = "Month",
+    y = "Total Complaints"
+  ) +
+  theme_report()
+print(plot3)
+```
+Observations:
+
+- **February** sees the lowest volume of complaints in both years.
+- The months of **June, September , December** in 2024  see the highest volume of complaints.
+- Opposite trend is observed in 2023 where **May, July, October** see the highest volume of complaints.
+- There is no clear seasonal pattern across the two years, suggesting that complaint volume is influenced by factors other than just time of year.
 
  
 ## Which complaint types are most common in NYC?
@@ -27,7 +87,6 @@ There were a unique total of 300 complaint types reported in the dataset.
 The complaint were bucketed into the following categories for better analysis:
 Noise Related, Heat/Water/Gas Issues, Buildings and Housing, Sanitation and Waste, Street and Traffic Conditions, Public Safety / Crime / Quality of Life, Vehicle and Parking, Utilities and Power, Pests and Animals, Others / Miscellaneous.
 ```{r}
-df_clean_final <- readRDS("df_clean_final.rds")
 complaint_category_mapping <- list(
   "Noise Related" = c(
     "Noise - Residential", "Noise - Street/Sidewalk", "Noise - Commercial",
@@ -172,9 +231,7 @@ borough.
 
 ```{r}
 # prepare plot data: percent label and reorder within each borough
-library(forcats)
-library(scales)
-library(tidytext)
+
 plot_df <- complaint_bucket_borough |>
   mutate(prop_label = paste0(round(proportion, 1), "%"),
          complaint_bucket = reorder_within(complaint_bucket, proportion, borough, fun = max))
@@ -215,20 +272,18 @@ and cluttered.
 - **Staten Island** shows relatively more *Street and Traffic Conditions* and *Vehicle and Parking* complaints, consistent with a more car-reliant area.  
 - Buckets like *Pests and Animals* or *Utilities and Power* appear as small but visible shares everywhere; the dot plot keeps them from disappearing into an “Other” bucket.
 ##
-To quantify how “caught up” the city is, we approximated a **daily backlog**:
 
-> backlog(date) ≈ cumulative complaints created − cumulative complaints closed.
 
 We plotted this as an **area chart** over the full time window.
 
 ## What is the backlog over time? is it growing or shrinking?
-```{r backlog, fig.width=14, fig.height=7}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(scales)
+To quantify how “caught up” the city is, we approximated a **daily backlog**:
 
-df <- df_clean_final   # or your df name
+> backlog(date) ≈ cumulative complaints created − cumulative complaints closed.
+```{r backlog, fig.width=14, fig.height=7}
+
+
+df <- df_clean_final   
 
 # 1) Get overall date range from created_date -------------------------------
 date_range <- df |>
@@ -273,11 +328,6 @@ backlog <- df |>
   )
 
 # 3) Plot -------------------------------------------------------------------
-caption_text <- paste(
-  "Backlog shows how many cases are open each day.",
-  "A rising line means new cases are arriving faster than they close (growing backlog);",
-  "a flat or falling line means the city is catching up."
-)
 
 p_backlog <- ggplot(backlog, aes(x = date, y = open_backlog)) +
   geom_area(alpha = 0.7) +
@@ -294,7 +344,7 @@ p_backlog <- ggplot(backlog, aes(x = date, y = open_backlog)) +
   labs(
     title    = "Backlog over time (system stress)",
     subtitle = "Number of open cases each day; different from resolution time",
-    caption  = caption_text
+    y="Time (months)",
   ) +
   theme_minimal(base_size = 13) +
   theme(
@@ -303,10 +353,6 @@ p_backlog <- ggplot(backlog, aes(x = date, y = open_backlog)) +
   )
 
 p_backlog
-
-
-
-
 ```
 
 
@@ -315,6 +361,94 @@ p_backlog
 - Backlog starts close to zero and **climbs steadily** throughout 2023 and 2024.  
 - There are short flat spots and small dips, but no long period where the city clearly catches up; by early 2025, the estimated backlog is near the 300k mark.  
 - This means that even if individual cases close in reasonable time, **new complaints** have been arriving faster than they are resolved , leaving a growing stock of open work. The backlog plot is our main evidence that the 311 system is **under sustained pressure** rather than just dealing with a one-off spike.
+
+## How long are complaints open? which types take the longest to resolve?
+```{r fig.width=14, fig.height=7}
+# 1) Reference date = latest date in the data (same as before)
+ref_date <- df_clean_final |>
+  mutate(
+    cd  = as.Date(created_date),
+    cl  = as.Date(closed_date),
+    act = as.Date(resolution_action_updated_date)
+  ) |>
+  summarise(latest = max(cd, cl, act, na.rm = TRUE)) |>
+  pull(latest)
+
+# 2) Filter to currently open complaints and compute age,
+#    using complaint_bucket instead of complaint_type
+open_age_bands <- df_clean_final |>
+  filter(status != "Closed") |>
+  mutate(
+    created_date    = as.Date(created_date),
+    age_days        = as.numeric(ref_date - created_date),
+    complaint_bucket = fct_explicit_na(complaint_bucket, "Unknown")
+  ) |>
+  filter(
+    !is.na(age_days),
+    age_days >= 0,
+    age_days <= 730   # cap at 2 years
+  ) |>
+  mutate(
+    age_band = cut(
+      age_days,
+      breaks = c(-Inf, 7, 30, 90, 365, Inf),
+      labels = c("0–7 days", "8–30 days", "31–90 days", "91–365 days", ">365 days"),
+      right  = TRUE
+    )
+  ) |>
+  filter(!is.na(age_band)) |>
+  # optional: order buckets by median age (oldest at top of plot)
+  mutate(
+    complaint_bucket = fct_reorder(complaint_bucket, age_days, .fun = median, .na_rm = TRUE)
+  )
+
+# 3) Proportions of age bands within each complaint bucket
+age_comp_by_bucket <- open_age_bands |>
+  group_by(complaint_bucket, age_band) |>
+  summarise(n = n(), .groups = "drop") |>
+  group_by(complaint_bucket) |>
+  mutate(share = n / sum(n)) |>
+  ungroup()
+
+# --- NEW: order complaint_bucket by share of >365 days ---
+bucket_order <- age_comp_by_bucket |>
+  filter(age_band == ">365 days") |>
+  arrange(desc(share)) |>
+  pull(complaint_bucket)
+
+age_comp_by_bucket <- age_comp_by_bucket |>
+  mutate(
+    complaint_bucket = factor(complaint_bucket, levels = rev(bucket_order))  # descending order
+  )
+# ---------------------------------------------------------
+
+# 4) Plot: backlog composition by complaint bucket
+ggplot(age_comp_by_bucket,
+       aes(x = complaint_bucket, y = share, fill = age_band)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  scale_fill_brewer(palette = "Blues", name = "Age band") +
+  labs(
+    title = "Open Cases: Backlog Age Composition by Complaint Bucket",
+    subtitle = paste(
+      "Currently open complaints (status ≠ 'Closed'); age is days since creation\n",
+      "up to", format(ref_date, " %b %d, %Y"),
+      ". Bars show the proportion of open cases in each age band.",
+      sep = ""
+    ),
+    x = "Complaint bucket",
+    y = "Share of open complaints"
+  ) +
+  theme_report()
+```
+Observations:
+
+- Categories such as **“Noise Related”** and **“Pests and Animals”** show relatively higher shares of long-standing open cases, reflecting the recurring and seasonal nature of these issues.  
+- **Infrastructure-related complaints** (e.g., “Utilities and Power,” “Sanitation and Waste,” “Buildings and Housing”) also maintain notable long-term backlogs, which may indicate ongoing structural or jurisdictional challenges.  
+- In contrast, categories like **“Vehicle and Parking”** or **“Street and Traffic Conditions”** show smaller proportions of old cases, suggesting that these are typically resolved more promptly.  
+- The consistent use of a single color palette (darker for older cases) reinforces the **aging severity gradient**, helping viewers immediately identify which complaint types are more delayed.
+
 
 ## How do complaints progress through the system? which types get stuck?
 
@@ -329,10 +463,6 @@ Each band’s thickness represents the number of complaints flowing along that p
 
 
 ```{r}
-library(ggalluvial)
-library(ggplot2)
-library(dplyr)
-library(scales)
 
 # Prepare alluvial data
 df_viz <- df_clean_final |>
@@ -368,6 +498,7 @@ ggplot(
     limits = c("Year", "Complaint Type", "Status"),
     expand = c(.05, .05)
   ) +
+  scale_y_continuous(labels = scales::comma) +
   labs(
     title = "Complaint Flow: Year → Complaint Type → Final Status",
     subtitle = "How complaints evolve from originating year to type to closure state",
@@ -389,13 +520,7 @@ ggplot(
 - Complaint buckets such as **Buildings and Housing** and **Sanitation and Waste** send a larger fraction of their volume into **Assigned** or **In Progress** compared to, say, **Noise** or **Vehicle and Parking**. That suggests more complex or slower workflows for physical-infrastructure issues.This plot gives a **big-picture map of the complaint lifecycle**, highlighting which categories tend to linger in the system.
 
 ```{r}
-library(tidyverse)
-library(lubridate)
-library(scales)
-library(stringr)
 
-# Optional but recommended for big data speed:
-# library(data.table)
 
 theme_report <- function() {
   theme_minimal(base_size = 13) +
@@ -454,7 +579,7 @@ cm <- df |>
     open_data_channel_type != "",
     !str_to_lower(open_data_channel_type) %in% c("unknown","unk","n/a","na")
   ) |>
-  mutate(created_dt = ymd_hms(created_date, quiet = TRUE, tz = "America/New_York")) %>%
+  mutate(created_dt = ymd_hms(created_date, quiet = TRUE, tz = "America/New_York")) |>
   filter(!is.na(created_dt)) |>
   mutate(
     month = floor_date(created_dt, "month"),
@@ -486,7 +611,7 @@ channel_shift_month <- cm |>
   ungroup() |>
   arrange(shift, channel, month) |>
   group_by(shift, channel) |>
-  mutate(share_roll3 = slide_dbl(share, mean, .before = 1, .after = 1, .complete = FALSE)) %>%
+  mutate(share_roll3 = slide_dbl(share, mean, .before = 1, .after = 1, .complete = FALSE)) |>
   ungroup()
 
 # --- Plot (matches your screenshot; legend on the right) ---
@@ -564,32 +689,28 @@ To connect complaints to the agencies that act on them, we built an
 This is the plot we think of as a **pair-exploration tool**: users can focus on one
 borough–type, type–agency, or agency–status “pair” at a time.
 
-```{r pair,fig.width=14, fig.height=7}
+```{r}
 #| label: parcats-311-borough-color
 #| echo: true
 
-library(dplyr)
-library(tidyr)
-library(plotly)
-library(forcats)
 
 d <- df_clean_final |>
   transmute(
     borough        = fct_lump_n(factor(borough), 5, other_level = "Other"),
-    complaint_type = fct_lump_n(factor(complaint_type), 10, other_level = "Other"),
+    complaint_bucket = fct_lump_n(factor(complaint_bucket), 10, other_level = "Other"),
     agency_name    = fct_lump_n(factor(agency_name), 10, other_level = "Other"),
     status         = fct_lump_n(factor(status), 6, other_level = "Other")
   ) |>
-  tidyr::drop_na(borough, complaint_type, agency_name, status) |>
+  tidyr::drop_na(borough, complaint_bucket, agency_name, status) |>
   filter(
     borough != "Other",
-    complaint_type != "Other",
+    complaint_bucket != "Other",
     agency_name != "Other",
     status != "Other"
   )
 
 d_counts <- d |>
-  count(borough, complaint_type, agency_name, status, name = "n") |>
+  count(borough, complaint_bucket, agency_name, status, name = "n") |>
   arrange(desc(n)) |>
   mutate(borough_id = as.integer(borough))
 
@@ -605,14 +726,14 @@ discrete_scale <- list(
   list(3/4, pal5[4]), list(3/4, pal5[4]),
   list(4/4, pal5[5]), list(4/4, pal5[5])
 )
-
+  
 fig_parcats <- plot_ly(
   type = "parcats",
   width = 1100, height = 650,
   arrangement = "freeform",
   dimensions = list(
     list(label = "Borough",        values = d_counts$borough),
-    list(label = "Complaint Type", values = d_counts$complaint_type),
+    list(label = "Complaint Bucket", values = d_counts$complaint_bucket),
     list(label = "Agency",         values = d_counts$agency_name),
     list(label = "Status",         values = d_counts$status)
   ),
@@ -623,7 +744,7 @@ fig_parcats <- plot_ly(
     cmin = 1, cmax = K,
     showscale = FALSE
   )
-) |>
+)%>%
   plotly::layout(
     title = list(
       text = "311 Complaint Flow: Borough → Type → Agency → Status (Colored by Borough)",
@@ -633,7 +754,6 @@ fig_parcats <- plot_ly(
   )
 
 fig_parcats
-
 
 
 ```
@@ -671,13 +791,6 @@ plotted this as a **heatmap** with percentages printed on the tiles.
 ```{r label: heatmap-location-complaint-better, fig-width: 12, fig-height: 7}
 
 
-library(dplyr)
-library(ggplot2)
-library(scales)
-library(stringr)
-library(forcats)
-library(tidyr)
-
 df1 <- df_clean_final |>
   mutate(
     location_type  = str_squish(location_type),
@@ -686,12 +799,12 @@ df1 <- df_clean_final |>
   filter(!is.na(location_type), location_type != "",
          !is.na(complaint_type), complaint_type != "")
 
-top_loc <- df1 |> count(location_type, sort = TRUE) %>% slice_head(n = 10) %>% pull(location_type)
-top_ct  <- df1 |> count(complaint_type, sort = TRUE) %>% slice_head(n = 15) %>% pull(complaint_type)
+top_loc <- df1 |> count(location_type, sort = TRUE) |> slice_head(n = 10) |> pull(location_type)
+top_ct  <- df1 |> count(complaint_type, sort = TRUE) |> slice_head(n = 15) |> pull(complaint_type)
 
 hm <- df1 |>
-  filter(location_type %in% top_loc, complaint_type %in% top_ct) %>%
-  count(location_type, complaint_type, name = "n") %>%
+  filter(location_type %in% top_loc, complaint_type %in% top_ct) |>
+  count(location_type, complaint_type, name = "n") |>
   group_by(location_type) |>
   mutate(share = n / sum(n)) |>
   ungroup()
@@ -760,8 +873,85 @@ and cleanliness problems.
 This figure supports simple, concrete statements such as:  
 > “On streets and sidewalks, the story is mostly about parking and trash; inside homes,
 it’s about heat, water, and living conditions.”
+## What is the volume of complaints received? How quickly are they resolved?##
+```{r}
+addr_plot <- df_clean_final %>%
+  mutate(
+    days_to_close = as.numeric(as.Date(closed_date) - as.Date(created_date))
+  ) %>%
+  group_by(borough, incident_address) %>%
+  summarise(
+    n_complaints = n(),
+    median_days  = median(days_to_close, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(n_complaints >= 30, median_days <= 500) %>%
+  mutate(
+    borough = factor(
+      borough,
+      levels = c("MANHATTAN", "BROOKLYN", "QUEENS", "BRONX", "STATEN ISLAND")
+    )
+  )
 
-#### Resolution actions by location type (faceted bar charts)
+# Single combined scatter plot (no facet)
+ggplot(addr_plot, aes(x = n_complaints, y = median_days, color = borough)) +
+  geom_point(size = 2.2, alpha = 0.8) +
+  scale_x_log10(
+  limits = c(20, 1000),    # widen range beyond your data
+  breaks = c(30, 50, 100, 200, 500, 1000),
+  labels = label_number(accuracy = 1)
+) +
+  labs(
+    title = "Chronic Hotspots: Complaint Volume vs Resolution Speed",
+    subtitle = "Each point represents a chronic address (≥ 30 complaints), colored by borough.",
+    x = "Number of complaints at address (log scale)",
+    y = "Median days to closure (within 60 days)",
+    color = "Borough"
+  ) + theme_report() 
+  ```
+## Which agency has faster resolution time?##
+```{r}
+df_clean <- df_clean_final |>
+  mutate(
+    created_date = as.POSIXct(created_date),
+    closed_date = as.POSIXct(closed_date),
+    resolution_time_days = as.numeric(difftime(closed_date, created_date, units = "days"))
+  ) |>
+  filter(!is.na(resolution_time_days), resolution_time_days >= 0)
+
+# Top 15 agencies by complaint volume
+top_agencies <- df_clean |>
+  count(agency_name) |>
+  slice_max(n, n = 15) |>
+  pull(agency_name)
+
+# Boxplot: resolution time by agency
+df_clean |>
+  filter(agency_name %in% top_agencies) |>
+  mutate(agency_name = reorder(agency_name, resolution_time_days, FUN = median)) |>
+  ggplot(aes(x = agency_name, y = resolution_time_days)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.alpha = 0.3) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, quantile(df_clean$resolution_time_days, 0.95, na.rm = TRUE))) +
+  labs(
+    title = "Resolution Time Distribution by Agency (Top 15)",
+    subtitle = "Median, quartiles, and outliers shown",
+    x = "Agency",
+    y = "Resolution Time (Days)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold")
+  )
+```
+Observations:
+
+- Agencies vary widely in their resolution time distributions.
+- Some agencies (e.g., *DOF - Department of Finance*, *NYPD - New York Police Department*) have relatively short median resolution times, while others (e.g., *DHS - Department of Homeless Services*, *HPD - Housing Preservation and Development*) show longer medians and wider spreads.
+- The presence of outliers indicates that while many complaints are resolved quickly, a subset takes significantly longer.
+
+## Resolution actions by location type (faceted bar charts)
 
 We then looked at **what kind of action** is actually taken, and **where**.  
 We grouped individual resolution descriptions into a handful of broader **action types**
@@ -773,12 +963,6 @@ We excluded “No Issue Found” so the panels focus on cases where something co
 
 ```{r label: action-taxonomy-location,fig-width: 12,fig-height: 8 }
 
-library(dplyr)
-library(ggplot2)
-library(lubridate)
-library(scales)
-library(stringr)
-library(forcats)
 
 # --- 1) Prep + tag resolution actions (same logic you used) ---
 df3 <- df_clean_final |>
@@ -803,7 +987,7 @@ df3 <- df_clean_final |>
 ```{r label: action-taxonomy-location,fig-height: 7 }
 
 # Chunk 2: plot (uses df3 from above)
-top_loc <- df3 |> count(location_type, sort = TRUE) %>% slice_head(n = 10) %>% pull(location_type)
+top_loc <- df3 |> count(location_type, sort = TRUE) |> slice_head(n = 10) |> pull(location_type)
 
 df3_f <- df3 |> filter(action_tag != "No Issue Found")
 
