@@ -21,12 +21,11 @@ book:
   chapters:
     - index.qmd
     - data.qmd
-    - results.qmd
+    - results_shweta.qmd
     - conclusion.qmd
-
 format:
   html:
-    theme: cosmo
+    theme: superhero
     code-fold: true
     fig-height: 8
     fig-width: 10
