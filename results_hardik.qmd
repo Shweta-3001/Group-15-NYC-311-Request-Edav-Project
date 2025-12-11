@@ -8,6 +8,7 @@ library(tidyr)
 library(forcats)
 library(scales)
 library(tidytext)
+library(ggalluvial)
 ``` 
 ## Which complaint types are most common in NYC?
 There were a unique total of 300 complaint types reported in the dataset. 
@@ -276,5 +277,151 @@ df_clean |>
     plot.title = element_text(face = "bold")
   )
 
+``` 
+## How do complaint trends vary across months in 2023 and 2024?
+```{r}
+complaints <- df_clean_final %>%
+  mutate(
+    year = year(created_date),
+    month = month(created_date, label = TRUE, abbr = TRUE),  # Jan, Feb, etc.
+    month_num = month(created_date),  # 1, 2, 3, etc.
+    year_month = floor_date(created_date, "month")  # First day of each month
+  )
+complaints_summary <- complaints %>%
+  filter(!is.na(year)) %>%    
+  group_by(year, month, month_num) %>%
+  summarise(total_complaints = n(), .groups = "drop") %>%
+  arrange(year, month_num)
+
+
+plot3 <- ggplot(complaints_summary, 
+                aes(x = month_num, y = total_complaints, 
+                    color = factor(year), group = year)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 1:12, labels = month.abb) +
+  scale_y_continuous(
+    limits = c(220000, 320000),
+    breaks = seq(220000, 320000, by = 10000),
+    labels = scales::comma
+  ) +
+  scale_color_brewer(palette = "Dark2", name = "Year") +
+  labs(
+    title = "Complaint Trends Across Months",
+    subtitle = "Monthly comparison of complaints in 2023 and 2024",
+    x = "Month",
+    y = "Total Complaints"
+  ) +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    plot.title = element_text(face = "bold", size = 16),
+    axis.line = element_line(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top"
+  )
+print(plot3)
 ```
-## 
+
+```{r}
+library(maps)
+library(ggplot2)
+library(dplyr)
+
+# Load NY state and county map data
+states <- map_data("state")
+counties <- map_data("county")
+
+# Filter for New York
+new_york <- subset(states, region == "new york")
+new_york_county <- subset(counties, region == "new york")
+
+# Get all NY ZIP codes with their associated data (including lat/lng)
+ny_zipcodes <- search_state('NY')
+
+# Join df_clean_final with the full ZIP code data
+df_with_cities <- df_clean_final %>%
+  left_join(
+    ny_zipcodes %>% select(zipcode, major_city, lat, lng),
+    by = c("incident_zip" = "zipcode")
+  )
+
+# Aggregate complaint counts by major_city
+city_complaints <- df_with_cities %>%
+  filter(!is.na(major_city)) %>%
+  group_by(major_city) %>%
+  summarise(
+    complaint_count = n(),
+    lat = first(lat),      # Get latitude from zipcodeR data
+    lng = first(lng)       # Get longitude from zipcodeR data
+  ) %>%
+  arrange(desc(complaint_count))
+
+# Create NY map with counties and city points
+ny_map <- ggplot(data = new_york, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray90") + 
+  geom_polygon(data = new_york_county, fill = NA, color = "white") + 
+  geom_polygon(color = "black", fill = NA) + 
+  # Add city points sized by complaint count
+  geom_point(
+    data = city_complaints, 
+    aes(x = lng, y = lat, size = complaint_count, group = NULL),
+    color = "red", 
+    alpha = 0.6
+  ) +
+  scale_size_continuous(
+    name = "Complaint Count",
+    range = c(1, 10)
+  ) +
+  ggtitle("New York Map - Complaints by Major City") + 
+  theme(
+    axis.title.x = element_blank(), 
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank()
+  )
+
+print(ny_map)
+
+# View top cities by complaint count
+head(city_complaints, 10)
+```
+```{r}
+ny_map <- ggplot(data = new_york, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color = "black", fill = "gray90") + 
+  geom_polygon(data = new_york_county, fill = NA, color = "white") + 
+  geom_polygon(color = "black", fill = NA) + 
+  # Add city points sized by complaint count
+  geom_point(
+    data = city_complaints, 
+    aes(x = lng, y = lat, size = complaint_count, group = NULL),
+    color = "red", 
+    alpha = 0.6
+  ) +
+  scale_size_continuous(
+    name = "Complaint Count",
+    range = c(1, 10)  # Adjust size range as needed
+  ) +
+  ggtitle("New York Map - Complaints by Major City") + 
+  theme(
+    axis.title.x = element_blank(), 
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank()
+  )
+
+print(ny_map)
+
+# View top cities by complaint count
+head(city_complaints, 10)
+```
+```{r}
+
+```
