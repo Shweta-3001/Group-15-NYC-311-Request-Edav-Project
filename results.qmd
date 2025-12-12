@@ -208,6 +208,8 @@ map_complaint_to_category <- function(complaint_type) {
 df_clean_final <- df_clean_final |>
   mutate(complaint_bucket = sapply(complaint_type, map_complaint_to_category))
 
+saveRDS(df_clean_final, "df_final.rds") 
+ # Save updated data frame
 complaint_bucket_counts <- df_clean_final |>
   count(complaint_bucket, sort = TRUE)
 
@@ -254,8 +256,7 @@ ggplot(plot_df, aes(x = proportion, y = complaint_bucket)) +
   ) +
   labs(
     title = "Complaint Categories by Borough (Cleveland dot plot)",
-    subtitle = "Proportion of complaints by category within each borough",
-    x = "Proportion (%)",
+    x = "Proportion (%) of complaints within borough",
     y = "Complaint Category"
   ) +
   coord_cartesian(clip = "off")
@@ -441,10 +442,10 @@ Observations:
 Next we look at what happens *after* a complaint is created.  
 The alluvial (Sankey-style) diagram follows the volume of complaints from:
 
-> **Year (2023 vs 2024) → Complaint Type (bucket) → Final Status  
-> (Assigned, Closed, In Progress)**
+> **Year (2023 vs 2024) → Complaint Type (bucket) → Progress Status (final)**
 
 Each band’s thickness represents the number of complaints flowing along that path.
+Only non-closed complaints are shown, since closed cases have exited the system.
 
 
 ```{r}
@@ -607,7 +608,6 @@ p_shift_channel <- ggplot(
   ) +
   labs(
     title = "311 Submission Channels by Time-of-Day Shift",
-    subtitle = "Channel composition varies by shift; thick lines show 3-month rolling averages to clarify trend direction (Top 4 channels; Unknown removed).",
     x = NULL, y = "Share of monthly complaints",
     color = "Channel"
   ) +
@@ -651,106 +651,8 @@ Taken together, these lines point to a **slow but clear shift towards mobile rep
 especially outside office hours, which has implications for how interfaces and follow-up
 communication should be designed.
 
-##  Who handles what: interactive borough–type–agency “pair” plot
 
-To connect complaints to the agencies that act on them, we built an
-**interactive Sankey diagram** with four stages:
-
-> **Borough → Detailed Complaint Type → Agency → Status**
-
-This is the plot we think of as a **pair-exploration tool**: users can focus on one
-borough–type, type–agency, or agency–status “pair” at a time.
-
-```{r}
-#| label: parcats-311-borough-color
-#| echo: true
-
-
-d <- df_clean_final |>
-  transmute(
-    borough        = fct_lump_n(factor(borough), 5, other_level = "Other"),
-    complaint_bucket = fct_lump_n(factor(complaint_bucket), 10, other_level = "Other"),
-    agency_name    = fct_lump_n(factor(agency_name), 10, other_level = "Other"),
-    status         = fct_lump_n(factor(status), 6, other_level = "Other")
-  ) |>
-  tidyr::drop_na(borough, complaint_bucket, agency_name, status) |>
-  filter(
-    borough != "Other",
-    complaint_bucket != "Other",
-    agency_name != "Other",
-    status != "Other"
-  )
-
-d_counts <- d |>
-  count(borough, complaint_bucket, agency_name, status, name = "n") |>
-  arrange(desc(n)) |>
-  mutate(borough_id = as.integer(borough))
-
-borough_levels <- levels(d_counts$borough)
-K <- length(borough_levels)
-
-pal5 <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#F0E442")
-
-discrete_scale <- list(
-  list(0/4, pal5[1]), list(0/4, pal5[1]),
-  list(1/4, pal5[2]), list(1/4, pal5[2]),
-  list(2/4, pal5[3]), list(2/4, pal5[3]),
-  list(3/4, pal5[4]), list(3/4, pal5[4]),
-  list(4/4, pal5[5]), list(4/4, pal5[5])
-)
-  
-fig_parcats <- plot_ly(
-  type = "parcats",
-  width = 1600, height = 800,
-  arrangement = "freeform",
-  dimensions = list(
-    list(label = "Borough",        values = d_counts$borough),
-    list(label = "Complaint Bucket", values = d_counts$complaint_bucket),
-    list(label = "Agency",         values = d_counts$agency_name),
-    list(label = "Status",         values = d_counts$status)
-  ),
-  counts = d_counts$n,
-  line = list(
-    color = d_counts$borough_id,
-    colorscale = discrete_scale,
-    cmin = 1, cmax = K,
-    showscale = FALSE
-  )
-)%>%
-  plotly::layout(
-    title = list(
-      text = "311 Complaint Flow: Borough → Type → Agency → Status (Colored by Borough)",
-      x = 0.02
-    ),
-    margin = list(l = 40, r = 40, t = 60, b = 30)
-  )
-
-fig_parcats
-
-
-```
-
-- Once we keep borough, detailed type (e.g. *Illegal Parking*, *Noise – Residential*),
-agency (NYPD, DOT, etc.), and status, the cross-tab becomes extremely high-dimensional.  
-- A static plot would either hide most detail or be unreadable.  
-- Interactivity (hovering to show labels and counts, highlighting a path) allows the
-reader to **drill down** without losing the full context.
-
-**How the interactivity helps**
-
-- Hovering on **Brooklyn → Illegal Parking** reveals a very thick band flowing to **NYPD**,
-making it obvious that parking enforcement is overwhelmingly a police workload.  
-- Highlighting **Noise – Residential** quickly shows which boroughs and agencies share
-that burden; for example, large flows from Queens and Brooklyn again route to NYPD.  
-- Smaller but meaningful flows (for example, *HEAT/HOT WATER* to the housing agency) are
-easy to surface by hovering, even though they would be visually drowned out if
-everything were static.
-
-Instead of giving one fixed conclusion, this plot serves as a **navigation map for
-responsibility**: it lets a reader answer questions like *“Who usually deals with this
-type of complaint in my borough, and how does it tend to end?”*.
-
-## 3.6 Where problems occur, and what type of complaints are occurring there?
+## Where problems occur, and what type of complaints are occurring there?
 
 
 We next asked **where** in the city the problems are happening.  
@@ -766,25 +668,25 @@ plotted this as a **heatmap** with percentages printed on the tiles.
 df1 <- df_clean_final |>
   mutate(
     location_type  = str_squish(location_type),
-    complaint_type = str_squish(complaint_type)
+    complaint_bucket = str_squish(complaint_bucket)
   ) |>
   filter(!is.na(location_type), location_type != "",
-         !is.na(complaint_type), complaint_type != "")
+         !is.na(complaint_bucket), complaint_bucket != "")
 
 top_loc <- df1 |> count(location_type, sort = TRUE) |> slice_head(n = 10) |> pull(location_type)
-top_ct  <- df1 |> count(complaint_type, sort = TRUE) |> slice_head(n = 15) |> pull(complaint_type)
+top_ct  <- df1 |> count(complaint_bucket, sort = TRUE) |> slice_head(n = 15) |> pull(complaint_bucket)
 
 hm <- df1 |>
-  filter(location_type %in% top_loc, complaint_type %in% top_ct) |>
-  count(location_type, complaint_type, name = "n") |>
+  filter(location_type %in% top_loc, complaint_bucket %in% top_ct) |>
+  count(location_type, complaint_bucket, name = "n") |>
   group_by(location_type) |>
   mutate(share = n / sum(n)) |>
   ungroup()
 
 # --- STORY ORDERING (cluster rows/cols by similar composition) ---
 mat_wide <- hm |>
-  select(location_type, complaint_type, share) |>
-  pivot_wider(names_from = complaint_type, values_from = share, values_fill = 0)
+  select(location_type, complaint_bucket, share) |>
+  pivot_wider(names_from = complaint_bucket, values_from = share, values_fill = 0)
 
 mat <- as.matrix(mat_wide[,-1, drop = FALSE])
 rownames(mat) <- mat_wide$location_type
@@ -798,12 +700,12 @@ ct_levels  <- colnames(mat)[col_ord]
 hm <- hm |>
   mutate(
     location_type  = factor(location_type, levels = loc_levels),
-    complaint_type = factor(complaint_type, levels = ct_levels),
+    complaint_bucket = factor(complaint_bucket, levels = ct_levels),
     # label color for readability on dark vs light tiles
     lbl_col = if_else(share >= 0.45, "black", "white")
   )
 
-ggplot(hm, aes(x = complaint_type, y = location_type, fill = share)) +
+ggplot(hm, aes(x = complaint_bucket, y = location_type, fill = share)) +
   geom_tile(color = "white", linewidth = 0.25) +
   geom_text(aes(label = percent(share, accuracy = 1), color = lbl_col),
             size = 3.3, fontface = "bold") +
@@ -816,7 +718,6 @@ ggplot(hm, aes(x = complaint_type, y = location_type, fill = share)) +
   ) +
   labs(
     title = "Complaint Composition by Location Type",
-    subtitle = "Within each location type, tiles show the share of complaints by complaint type (clustered to reveal similar patterns)",
     x = "Complaint Type (top 15)",
     y = "Location Type (top 10)"
   ) +
@@ -842,9 +743,6 @@ sanitation issues.
 - Commercial spaces (*Store/Commercial*, *Club/Bar/Restaurant*) are almost entirely noise
 and cleanliness problems.
 
-This figure supports simple, concrete statements such as:  
-> “On streets and sidewalks, the story is mostly about parking and trash; inside homes,
-it’s about heat, water, and living conditions.”
 ## What is the volume of complaints received? How quickly are they resolved?##
 ```{r}
 addr_plot <- df_clean_final %>%
@@ -916,7 +814,6 @@ df_clean |>
   scale_y_continuous(limits = c(0, quantile(df_clean$resolution_time_days, 0.95, na.rm = TRUE))) +
   labs(
     title = "Resolution Time Distribution by Agency (Top 15)",
-    subtitle = "Median, quartiles, and outliers shown",
     x = "Agency",
     y = "Resolution Time (Days)"
   ) +
@@ -929,7 +826,7 @@ df_clean |>
 Observations:
 
 - Agencies vary widely in their resolution time distributions.
-- Some agencies (e.g., *DOF - Department of Finance*, *NYPD - New York Police Department*) have relatively short median resolution times, while others (e.g., *DHS - Department of Homeless Services*, *HPD - Housing Preservation and Development*) show longer medians and wider spreads.
+- Some agencies (e.g., *DHS - Department of Homeless Services*, *NYPD - New York Police Department*) have relatively short median resolution times, while others (e.g., *Department of Transportation*, *HPD - Housing Preservation and Development*) show longer medians and wider spreads.
 - The presence of outliers indicates that while many complaints are resolved quickly, a subset takes significantly longer.
 
 ## Resolution actions by location type (faceted bar charts)
@@ -993,7 +890,6 @@ ggplot(action_loc, aes(x = location_type_sorted, y = share_within_action, fill =
   scale_fill_brewer(palette = "Set2", guide = "none") +
   labs(
     title = "Resolution Actions by Location Type (Faceted)",
-    subtitle = "Excludes “No Issue Found”. Each panel shows where that action occurs most (shares sum to 100% within each action).",
     x = NULL, y = "Share within action"
   ) +
   theme_minimal() +

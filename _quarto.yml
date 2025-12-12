@@ -12,7 +12,7 @@ book:
   author:
     - Shweta Tripathi (sst2166)
     - Hardik Saurabh Gupta (hg2770)
-  repo-url: https://shweta-3001.github.io/Group-15-NYC-311-Request-Edav-Project/
+  repo-url: https://github.com/Shweta-3001/Group-15-NYC-311-Request-Edav-Project
   date: today
   page-footer:
     right: |
@@ -22,12 +22,12 @@ book:
     - index.qmd
     - data.qmd
     - results.qmd
+    - interactive_plot.qmd
     - conclusion.qmd
 format:
   html:
     theme: superhero
     code-fold: true
-    fig-height: 8
-    fig-width: 10
+
 
 

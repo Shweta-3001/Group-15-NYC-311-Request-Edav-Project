@@ -1,0 +1,113 @@
+## Interactive Visualizations
+
+###  Who handles what: interactive borough–type–agency “pair” plot
+
+To connect complaints to the agencies that act on them, we built an
+**interactive Sankey diagram** with four stages:
+
+> **Borough → Detailed Complaint Type → Agency → Status**
+
+This is the plot we think of as a **pair-exploration tool**: users can focus on one
+borough–type, type–agency, or agency–status “pair” at a time.
+
+```{r}
+#| out-width: 100%
+#| fig-width: 20
+#| fig-height: 10
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(stringr)
+library(tidyr)
+library(forcats)
+library(scales)
+library(tidytext)
+library(ggalluvial)
+library(plotly)
+#| label: parcats-311-borough-color
+#| echo: true
+df_clean_final <- readRDS("complaint_bucket_borough.rds")
+
+d <- df_clean_final |>
+  transmute(
+    borough        = fct_lump_n(factor(borough), 5, other_level = "Other"),
+    complaint_bucket = fct_lump_n(factor(complaint_bucket), 10, other_level = "Other"),
+    agency_name    = fct_lump_n(factor(agency_name), 10, other_level = "Other"),
+    status         = fct_lump_n(factor(status), 6, other_level = "Other")
+  ) |>
+  tidyr::drop_na(borough, complaint_bucket, agency_name, status) |>
+  filter(
+    borough != "Other",
+    complaint_bucket != "Other",
+    agency_name != "Other",
+    status != "Other"
+  )
+
+d_counts <- d |>
+  count(borough, complaint_bucket, agency_name, status, name = "n") |>
+  arrange(desc(n)) |>
+  mutate(borough_id = as.integer(borough))
+
+borough_levels <- levels(d_counts$borough)
+K <- length(borough_levels)
+
+pal5 <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#F0E442")
+
+discrete_scale <- list(
+  list(0/4, pal5[1]), list(0/4, pal5[1]),
+  list(1/4, pal5[2]), list(1/4, pal5[2]),
+  list(2/4, pal5[3]), list(2/4, pal5[3]),
+  list(3/4, pal5[4]), list(3/4, pal5[4]),
+  list(4/4, pal5[5]), list(4/4, pal5[5])
+)
+  
+fig_parcats <- plot_ly(
+  type = "parcats",
+  arrangement = "freeform",
+  dimensions = list(
+    list(label = "Borough",        values = d_counts$borough),
+    list(label = "Complaint Bucket", values = d_counts$complaint_bucket),
+    list(label = "Agency",         values = d_counts$agency_name),
+    list(label = "Status",         values = d_counts$status)
+  ),
+  counts = d_counts$n,
+  line = list(
+    color = d_counts$borough_id,
+    colorscale = discrete_scale,
+    cmin = 1, cmax = K,
+    showscale = FALSE
+  )
+)%>%
+  plotly::layout(
+    title = list(
+      text = "311 Complaint Flow: Borough → Type → Agency → Status (Colored by Borough)",
+      x = 0.02
+    ),
+    margin = list(l = 40, r = 40, t = 60, b = 30)
+  )|>
+  layout(autosize = TRUE)
+
+fig_parcats
+
+
+```
+
+- Once we keep borough, detailed type (e.g. *Illegal Parking*, *Noise – Residential*),
+agency (NYPD, DOT, etc.), and status, the cross-tab becomes extremely high-dimensional.  
+- A static plot would either hide most detail or be unreadable.  
+- Interactivity (hovering to show labels and counts, highlighting a path) allows the
+reader to **drill down** without losing the full context.
+
+**How the interactivity helps**
+
+- Hovering on **Brooklyn → Illegal Parking** reveals a very thick band flowing to **NYPD**,
+making it obvious that parking enforcement is overwhelmingly a police workload.  
+- Highlighting **Noise – Residential** quickly shows which boroughs and agencies share
+that burden; for example, large flows from Queens and Brooklyn again route to NYPD.  
+- Smaller but meaningful flows (for example, *HEAT/HOT WATER* to the housing agency) are
+easy to surface by hovering, even though they would be visually drowned out if
+everything were static.
+
+Instead of giving one fixed conclusion, this plot serves as a **navigation map for
+responsibility**: it lets a reader answer questions like *“Who usually deals with this
+type of complaint in my borough, and how does it tend to end?”*.

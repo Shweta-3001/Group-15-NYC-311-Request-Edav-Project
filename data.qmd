@@ -245,7 +245,7 @@ ggplot(borough_counts,
 ```
 Interpretation:
 
--Unspecified boroughs ~ 8000 complaints (0.1%) were excluded in final data.
+- Unspecified boroughs ~ 8000 complaints (0.1%) were excluded in final data.
 - Brooklyn and Queens together account for **more than half** of all 311 complaints, which is broadly consistent with their larger populations and geographic size.
 - Staten Island contributes a comparatively small share of complaints (3.7%), reflecting both its smaller population and possibly different usage patterns of 311.
 
@@ -375,7 +375,7 @@ The bar chart shows:
 - When making maps or location summaries, we'll only use the **valid coordinate subset**. This prevented us from plotting points that are clearly wrong (like locations outside of NYC or at (0, 0)).
 
 
-```{r zip fig-width: 12,fig-height: 8 }
+```{r zip fig-width: 14,fig-height: 10}
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -397,14 +397,6 @@ df_zip <- df_clean_final |>
 
 ggplot(df_zip, aes(x = reorder(zip_category, -n), y = n, fill = zip_category)) +
   geom_col(width = 0.6) +
-  
-  # FIX: always place labels *just above* bars safely
-  geom_text(
-    aes(label = label),
-    vjust = -0.8,   # pull upward slightly
-    size = 5,
-    fontface = "bold"
-  ) +
   
   scale_fill_manual(values = c(
     "Valid NYC ZIP" = "#1b9e77",

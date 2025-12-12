@@ -1,64 +1,38 @@
-This repo contains a [Quarto book](https://quarto.org/docs/books/) template for the EDAV final project.
+The project is divides into 5 parts
+1. Introduction
 
-## Follow these instructions carefully
+NYC’s 311 service request data captures non-emergency complaints reported by residents across the five boroughs. These requests reflect issues such as noise, sanitation, housing, and public safety. This project analyzes complaint patterns, agency involvement, and borough-level differences, and visualizes the end-to-end flow of complaints.
 
-*If you have any difficulties or have feedback of any kind, please [file an issue](https://github.com/jtr13/quarto-edav-template/issues) or ask questions in the [Discussions](https://github.com/jtr13/quarto-edav-template/discussions) section.*
+2. Data
 
-[Video tutorial](https://www.youtube.com/watch?v=emgS2JI4jCk) (walkthrough of steps below)
+Key variables include:
 
-### Copy this template (GitHub)
+borough – location of the complaint
+complaint_bucket – grouped complaint type
+agency_name – agency responsible
+status – current resolution stage
+latitude/longitude – geolocation
 
-- [ ] 1. Click the green "Use this template" button above and choose "Create a new repository". If you don't see the "Use this template" option, **log in to GitHub**. DO NOT FORK THE REPO. Choose a descriptive name for your repo, such as "federalbudget" or "AIDSdeaths". (If you change your topic before you do any work, delete the repo and start over.)
+Missing values were checked, with incomplete or low-frequency categories grouped as “Other” or removed for clarity. Overall, the data is clean and suitable for categorical and flow-based analysis.
 
-- [ ] 2. Leave the setting for viewing the repo as "Public". (Otherwise, we will not be able to access your rendered book.)
+3. Results
 
-- [ ] 3. In the Description field, write "Source files for final project" then click "Create repository".
+Boroughs show distinct complaint patterns (e.g., Noise in Manhattan/Brooklyn, Sanitation in outer boroughs).
 
-### Set up Pages (GitHub)
+A few major agencies handle most of the requests (e.g., NYPD, DOT).
 
-- [ ] 1. You've now left the template page and are viewing your new repo on GitHub. On the home page, click Settings. Click the "Pages" section on the left. In the Build and Deployment section, set Source to "Deploy from a branch" (Classic Pages experience) and Branch to main with /docs folder. Click Save.
+Status distribution shows many cases resolved quickly, while some categories remain open longer.
 
-- [ ] 2. Click the little gear button near "About" on the top right side of the home page of the repo and check the "Use your Github Pages website" box under "Website". Click "Save changes". Test the link and you should see a web site with a stick figure on it. It may take a few minutes to build so if it's not working do a few more steps and then come back to check.
+Interactions among borough × complaint × agency reveal clear clusters and workload concentrations.
 
-### Copy the repo link (GitHub)
+4. Interactive Plot
 
-- [ ] 1. Click the green Code button, choose "HTTPS" and copy the link below. It should have the format: https&#xfeff;://github.com/[USERNAME]/[REPONAME].git
+An interactive parallel categories plot visualizes the flow:
 
-### Clone the repo (RStudio)
+Borough → Complaint Type → Agency → Status
 
-- [ ] 1. Clone your new repo with *File, New Project..., Version Control, Git* in RStudio. You will need to paste the link from the previous step in the Repository URL box. If it's not automatically populated, enter the repo name in the "Project directory name:" box. Choose the location of the project.
+It allows users to explore complaint pathways, identify dominant complaint types per borough, see which agencies handle specific issues, and observe how complaints are resolved.
 
-### Edit `_quarto.yml` (RStudio)
+5. Conclusion
 
-Tip: From the file pane in RStudio, open `README.md`, which contains these instructions. You can delete steps as you complete them.
-
-- [ ] 1. Change the all caps info in the `title:`, `author:` and `repo-url` fields in the YAML (top) section of `_quarto.yml` to your info. (Note: it's very important to maintain the indenting structure in this file precisely as is -- be careful!)
-
-### Render the book (RStudio)
-
-- [ ] 1. If you haven't already, click "Help" "Check for Updates" to make sure you have the latest version of RStudio (and thus have Quarto installed.)
-
-- [ ] 2. Render the web site locally by clicking the "Build" tap on the right and then "Render Book".
-
-- [ ] 3. Use `browseURL("docs/index.html")` to view your book locally (or just open `docs/index.html` in a browser).
-
-- [ ] 4. If it looks good, commit and push all changed files to GitHub.
-      
-- [ ] 5. Check that the rendered site looks correct on GitHub and that the links back to GitHub (icon on top left, edit this page / report an issue on right) work properly. Note that there is a delay between the time you push the files and when they show up on your sitel You can check the progress by clicking the Actions tab.
-
-(You will need to repeat steps 2 and 4 every time you wish to update the book on GitHub Pages.)
-
-### Update README (GitHub or RStudio)
-
-- [ ] 1. Delete the content of this **README** and add a short description of your project in its place. If you're working locally, be sure to commit and push the changes to GitHub.
-
-### Optional
-
-- [ ] 1. Choose a theme from [https://bootswatch.com/](https://bootswatch.com/) and replace "cosmo" in `_quarto.yml` with your prefered theme.
-
-### Additional features
-
-Please consult the official guide to **quarto** book websites: [https://quarto.org/docs/books/](https://quarto.org/docs/books/)
-
-
-
+NYC 311 complaints provide insight into resident concerns and agency performance. The analysis highlights borough differences, agency workloads, and common complaint pathways. The interactive flow plot offers an intuitive way to explore how complaints move through the system. Future work could examine trends over time or model response patterns.
