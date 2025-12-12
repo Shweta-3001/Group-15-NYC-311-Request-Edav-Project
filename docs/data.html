@@ -183,6 +183,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#data-source-and-scope" id="toc-data-source-and-scope" class="nav-link active" data-scroll-target="#data-source-and-scope"><span class="header-section-number">2.1</span> Data Source and Scope</a>
   <ul class="collapse">
   <li><a href="#timestamps" id="toc-timestamps" class="nav-link" data-scroll-target="#timestamps"><span class="header-section-number">2.1.1</span> Timestamps</a></li>
+  <li><a href="#categorical-descriptors" id="toc-categorical-descriptors" class="nav-link" data-scroll-target="#categorical-descriptors"><span class="header-section-number">2.1.2</span> Categorical Descriptors</a></li>
+  <li><a href="#location-information" id="toc-location-information" class="nav-link" data-scroll-target="#location-information"><span class="header-section-number">2.1.3</span> Location Information</a></li>
+  <li><a href="#channel-and-resolution" id="toc-channel-and-resolution" class="nav-link" data-scroll-target="#channel-and-resolution"><span class="header-section-number">2.1.4</span> Channel and Resolution</a></li>
   </ul></li>
   <li><a href="#data-quality-missingness-across-columns" id="toc-data-quality-missingness-across-columns" class="nav-link" data-scroll-target="#data-quality-missingness-across-columns"><span class="header-section-number">2.2</span> Data Quality: Missingness Across Columns</a></li>
   <li><a href="#focusing-on-key-categorical-variables" id="toc-focusing-on-key-categorical-variables" class="nav-link" data-scroll-target="#focusing-on-key-categorical-variables"><span class="header-section-number">2.3</span> Focusing on Key Categorical Variables</a></li>
@@ -213,16 +216,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>New York City’s 311 system is how, residents let the city know about issues in their communities, such as noise, heating problems, trash, and illegal parking etc. Each entry in the 311 data represents a moment when someone was concerned enough to reach out to the city for assistance.</p>
-<p>In this project, we analyze two years of NYC 311 complaint data to answer questions about:</p>
-<ol type="1">
-<li><p><strong>What are New Yorkers worried about?</strong><br>
-How do the types of complaints differ by <strong>location</strong> (e.g., borough, location type) and by <strong>reporting channel</strong> (phone, online, mobile)?</p></li>
-<li><p><strong>How do complaints get handled from start to finish?</strong><br>
-What does the journey look like from the time a complaint is created until it is closed, and how do status and resolution patterns vary across complaint types and agencies?</p></li>
-<li><p><strong>How busy is the system, and where are the main slowdowns?</strong><br>
-When is the 311 system under the most pressure, and how do backlog and resolution times reveal operational bottlenecks?</p></li>
-</ol>
-<p>These questions guide the structure of the analysis and the choice of visualizations throughout the report.</p>
 <section id="data-source-and-scope" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="data-source-and-scope"><span class="header-section-number">2.1</span> Data Source and Scope</h2>
 <p>The raw data come from the NYC Open Data 311 service request API. To avoid time-outs and memory issues, we chose to download the data month-by-month, combined, and then saved as an <code>.rds</code> file for efficient reuse. In total, the working dataset contains <strong>around 6M</strong> over a two-year window, from early 2023 through late 2024.</p>
@@ -290,8 +283,9 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </li>
 <li><code>resolution_action_updated_date</code>: when a resolution action was logged</li>
 </ul>
-<section id="categorical-descriptors" class="level4" data-number="2.1.1.1">
-<h4 data-number="2.1.1.1" class="anchored" data-anchor-id="categorical-descriptors"><span class="header-section-number">2.1.1.1</span> Categorical Descriptors</h4>
+</section>
+<section id="categorical-descriptors" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="categorical-descriptors"><span class="header-section-number">2.1.2</span> Categorical Descriptors</h3>
 <ul>
 <li><code>agency</code>, <code>agency_name</code><br>
 </li>
@@ -302,8 +296,8 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <li><code>status</code> (e.g., <code>"Closed"</code>, <code>"Assigned"</code>, <code>"In Progress"</code>)</li>
 </ul>
 </section>
-<section id="location-information" class="level4" data-number="2.1.1.2">
-<h4 data-number="2.1.1.2" class="anchored" data-anchor-id="location-information"><span class="header-section-number">2.1.1.2</span> Location Information</h4>
+<section id="location-information" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="location-information"><span class="header-section-number">2.1.3</span> Location Information</h3>
 <ul>
 <li><code>borough</code>, <code>incident_zip</code>, <code>incident_address</code><br>
 </li>
@@ -312,14 +306,13 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <li><code>latitude</code>, <code>longitude</code></li>
 </ul>
 </section>
-<section id="channel-and-resolution" class="level4" data-number="2.1.1.3">
-<h4 data-number="2.1.1.3" class="anchored" data-anchor-id="channel-and-resolution"><span class="header-section-number">2.1.1.3</span> Channel and Resolution</h4>
+<section id="channel-and-resolution" class="level3" data-number="2.1.4">
+<h3 data-number="2.1.4" class="anchored" data-anchor-id="channel-and-resolution"><span class="header-section-number">2.1.4</span> Channel and Resolution</h3>
 <ul>
 <li><code>open_data_channel_type</code> (e.g., <code>ONLINE</code>, <code>PHONE</code>, <code>MOBILE</code>, <code>OTHER</code>)<br>
 </li>
 <li><code>resolution_description</code> and <code>resolution_action</code> fields</li>
 </ul>
-</section>
 </section>
 </section>
 <section id="data-quality-missingness-across-columns" class="level2" data-number="2.2">
@@ -375,7 +368,6 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 33                   created_date            1</code></pre>
 </div>
 </div>
-<p><strong>Top Columns by Missingness Rate</strong></p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -419,21 +411,20 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
 <span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top Columns by Missingness Rate"</span>,</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Showing the 25 columns with the highest proportion of missing values"</span>,</span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Missingness rate"</span></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>),</span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title   =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">16</span>),</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>),</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>p_missing</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Features"</span>,</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Missingness rate"</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>),</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title   =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">16</span>),</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>p_missing</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -453,10 +444,14 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </details>
 </div>
 <p>The first plot shows the <strong>25 columns with the highest proportion of missing values</strong>. Each bar is a column, ordered from most to least missing, and the color scale encodes the missingness rate.</p>
-<p>Key observations: - Several columns have <strong>almost complete missingness (≈ 95–100%)</strong>, including<br>
+<p>Key observations:</p>
+<ul>
+<li>Several columns have <strong>almost complete missingness (≈ 95–100%)</strong>, including<br>
 <code>taxi_company_borough</code>, <code>road_ramp</code>, <code>bridge_highway_direction</code>, <code>bridge_highway_name</code>,<br>
-<code>bridge_highway_segment</code>, and <code>taxi_pick_up_location</code>. - Many of these fields are highly specialized (e.g., taxi or bridge/highway metadata) that apply only to a very small subset of 311 requests. - A second tier of columns (e.g., <code>intersection_street_1</code>, <code>intersection_street_2</code>, <code>cross_street_1</code>, <code>cross_street_2</code>) has <strong>moderate missingness</strong> (roughly 25–40%), typically for records where complaints do not occur at an intersection. We decided to remove <strong>extreme missingness</strong> columns from final dataframe, which will add noise and complexity without contributing to the main objective of the project and columns with <strong>moderate missingness</strong> but high potential value were kept for further analysis.</p>
-<p><strong>Heatmap of Missing Data (Sampled Rows)</strong></p>
+<code>bridge_highway_segment</code>, and <code>taxi_pick_up_location</code>.</li>
+<li>Many of these fields are highly specialized (e.g., taxi or bridge/highway metadata) that apply only to a very small subset of 311 requests.</li>
+<li>A second tier of columns (e.g., <code>intersection_street_1</code>, <code>intersection_street_2</code>, <code>cross_street_1</code>, <code>cross_street_2</code>) has <strong>moderate missingness</strong> (roughly 25–40%), typically for records where complaints do not occur at an intersection. We decided to remove <strong>extreme missingness</strong> columns from final dataframe, which will add noise and complexity without contributing to the main objective of the project and columns with <strong>moderate missingness</strong> but high potential value were kept for further analysis.</li>
+</ul>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -486,11 +481,15 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </div>
 </div>
 </div>
-<p>To complement the summary bar chart, we also visualized missingness <strong>row by row</strong> for a random sample of records. In this heatmap: - Some columns form <strong>solid vertical red bands</strong>, meaning they are missing for <em>almost all</em> rows which correspond to the heavily missing taxi/bridge fields seen in the previous plot. - Other columns show <strong>stripe-like patterns</strong>, where only some rows are missing (e.g., <code>closed_date</code> for still-open complaints). - Core analytical fields such as <code>created_date</code>, <code>complaint_type</code>, and <code>borough</code> appear almost entirely white, confirming that they are reliable.</p>
+<p>To complement the summary bar chart, we also visualized missingness <strong>row by row</strong> for a random sample of records. In this heatmap:</p>
+<ul>
+<li>Some columns form <strong>solid vertical red bands</strong>, meaning they are missing for <em>almost all</em> rows which correspond to the heavily missing taxi/bridge fields seen in the previous plot.</li>
+<li>Other columns show <strong>stripe-like patterns</strong>, where only some rows are missing (e.g., <code>closed_date</code> for still-open complaints).</li>
+<li>Core analytical fields such as <code>created_date</code>, <code>complaint_type</code>, and <code>borough</code> appear almost entirely white, confirming that they are reliable.</li>
+</ul>
 </section>
 <section id="focusing-on-key-categorical-variables" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="focusing-on-key-categorical-variables"><span class="header-section-number">2.3</span> Focusing on Key Categorical Variables</h2>
-<p><strong>Borough Distribution of 311 Complaints</strong></p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -498,59 +497,39 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>valid_boros <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"MANHATTAN"</span>, <span class="st">"BROOKLYN"</span>, <span class="st">"QUEENS"</span>, <span class="st">"BRONX"</span>, <span class="st">"STATEN ISLAND"</span>)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>df_clean_final <span class="ot">&lt;-</span> combined <span class="sc">|&gt;</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(borough <span class="sc">%in%</span> valid_boros)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Borough counts on cleaned data</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>borough_counts <span class="ot">&lt;-</span> df_clean_final <span class="sc">|&gt;</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(borough, <span class="at">name =</span> <span class="st">"n"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">share =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n),</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># nice index label</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">boro_label =</span> <span class="fu">paste0</span>(<span class="fu">row_number</span>(), <span class="st">". "</span>, borough),</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># text shown on the bar: comma count + %</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_text =</span> <span class="fu">paste0</span>(<span class="fu">comma</span>(n), <span class="st">" ("</span>, <span class="fu">percent</span>(share, <span class="at">accuracy =</span> <span class="fl">0.1</span>), <span class="st">")"</span>)</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n)) <span class="sc">|&gt;</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">boro_label =</span> <span class="fu">factor</span>(boro_label, <span class="at">levels =</span> <span class="fu">rev</span>(boro_label))</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(borough_counts,</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> boro_label, <span class="at">y =</span> n, <span class="at">fill =</span> share)) <span class="sc">+</span></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">width =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> label_text),</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.05</span>, <span class="at">size =</span> <span class="fl">3.5</span></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>(<span class="at">clip =</span> <span class="st">"off"</span>) <span class="sc">+</span></span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> scales<span class="sc">::</span>comma,                     <span class="co"># &lt;-- commas</span></span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.30</span>))       <span class="co"># extra room for labels</span></span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(</span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">option =</span> <span class="st">"C"</span>,</span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>(<span class="at">accuracy =</span> <span class="dv">1</span>),</span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Share of</span><span class="sc">\n</span><span class="st">complaints"</span></span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Borough Distribution of 311 Complaints"</span>,</span>
-<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Indexed by frequency; labels show count (comma separated) and percent of total"</span>,</span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of complaints"</span></span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title   =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">16</span>),</span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>),</span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
-<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Borough counts on cleaned data</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>borough_counts <span class="ot">&lt;-</span> combined <span class="sc">|&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(borough, <span class="at">name =</span> <span class="st">"n"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">share =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n),</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_text =</span> <span class="fu">paste0</span>(<span class="fu">comma</span>(n), <span class="st">" ("</span>, <span class="fu">percent</span>(share, <span class="at">accuracy =</span> <span class="fl">0.05</span>), <span class="st">")"</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(borough_counts,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(borough, n), <span class="at">y =</span> n)) <span class="sc">+</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">width =</span> <span class="fl">0.7</span>, <span class="at">fill =</span> <span class="st">"#1b9e77"</span>) <span class="sc">+</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> label_text), <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> scales<span class="sc">::</span>comma,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>(<span class="at">n =</span> <span class="dv">8</span>),</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.15</span>))</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Borough Distribution of 311 Complaints"</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"NYC Borough"</span>,</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of complaints"</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x  =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title   =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">16</span>),</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -560,39 +539,29 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </div>
 </div>
 </div>
-<p>The horizontal bar chart shows both the raw counts and the percentage share for each borough, ordered by frequency:</p>
-<ul>
-<li><strong>Brooklyn:</strong> 2,047,219 complaints (30.7%)<br>
-</li>
-<li><strong>Queens:</strong> 1,604,444 complaints (24.0%)<br>
-</li>
-<li><strong>Manhattan:</strong> 1,408,383 complaints (21.1%)<br>
-</li>
-<li><strong>Bronx:</strong> 1,365,908 complaints (20.5%)<br>
-</li>
-<li><strong>Staten Island:</strong> 249,281 complaints (3.7%)</li>
-</ul>
 <p>Interpretation:</p>
-<ul>
-<li>Brooklyn and Queens together account for <strong>more than half</strong> of all 311 complaints, which is broadly consistent with their larger populations and geographic size.</li>
-<li>Staten Island contributes a comparatively small share of complaints (3.7%), reflecting both its smaller population and possibly different usage patterns of 311.</li>
-</ul>
+<p>-Unspecified boroughs ~ 8000 complaints (0.1%) were excluded in final data. - Brooklyn and Queens together account for <strong>more than half</strong> of all 311 complaints, which is broadly consistent with their larger populations and geographic size. - Staten Island contributes a comparatively small share of complaints (3.7%), reflecting both its smaller population and possibly different usage patterns of 311.</p>
 <p>This plot acts as a <strong>sanity check</strong> that the dataset reflects known patterns of NYC population and service use and also it provides context for later plots that break down complaint types and system performance <strong>within</strong> each borough.</p>
 <p><strong>Missingness Pattern for Core Categorical Variables</strong></p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#label</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>df_clean_final <span class="ot">&lt;-</span> df_clean_final <span class="sc">|&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    unique_key, created_date, closed_date, resolution_action_updated_date,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    agency, agency_name, complaint_type, descriptor, status,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    borough, city, incident_zip, incident_address,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    latitude, longitude, location_type,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    open_data_channel_type,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    resolution_description</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#saveRDS(df_clean_final, "df_clean_final.rds")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>valid_boros <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"MANHATTAN"</span>, <span class="st">"BROOKLYN"</span>, <span class="st">"QUEENS"</span>, <span class="st">"BRONX"</span>, <span class="st">"STATEN ISLAND"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>df_clean_final <span class="ot">&lt;-</span> combined <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(borough <span class="sc">%in%</span> valid_boros)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>df_clean_final <span class="ot">&lt;-</span> df_clean_final <span class="sc">|&gt;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    unique_key, created_date, closed_date, resolution_action_updated_date,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    agency, agency_name, complaint_type, descriptor, status,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    borough, city, incident_zip, incident_address,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    latitude, longitude, location_type,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    open_data_channel_type,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    resolution_description</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">#saveRDS(df_clean_final, "df_clean_final.rds")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
@@ -643,20 +612,6 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </div>
 </div>
 </div>
-<p>To ensure that the main categorical variables used throughout the analysis were stable, we examined the joint missingness pattern for three key fields:</p>
-<ul>
-<li><code>borough</code><br>
-</li>
-<li><code>complaint_type</code><br>
-</li>
-<li><code>location_type</code></li>
-</ul>
-<p>The pattern plot has:</p>
-<ul>
-<li>A bar at the top showing <strong>% rows missing</strong> for each variable.</li>
-<li>A matrix in the center indicating which combinations of missing/present occur.</li>
-<li>A bar on the right showing how common each pattern is.</li>
-</ul>
 <p>Main findings:</p>
 <ul>
 <li><code>borough</code> and <code>complaint_type</code> are essentially <strong>complete</strong> almost no records are missing these fields.</li>
@@ -673,7 +628,6 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <section id="spatial-data-quality-checks" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="spatial-data-quality-checks"><span class="header-section-number">2.4</span> Spatial Data Quality Checks</h2>
 <p>Many of the most interesting 311 questions are spatial (Which neighborhoods complain the most? Where are issues slowest to resolve?), so we checked the quality of the geographic fields before using them.</p>
-<p><strong>Latitude–Longitude Validity</strong></p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -709,16 +663,15 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#1b9e77"</span>, <span class="st">"#d95f02"</span>)) <span class="sc">+</span></span>
 <span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Geolocation Validity of 311 Records"</span>,</span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Latitude–longitude checked against the NYC bounding box"</span>,</span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"% of Records"</span>,</span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>)</span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Geolocation Status"</span>,</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"% of Records"</span>,</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -728,20 +681,12 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </div>
 </div>
 </div>
-<p>In the above plot we classified each record as:</p>
-<ul>
-<li>having <strong>valid NYC coordinates</strong>, or<br>
-</li>
-<li>having <strong>invalid or missing coordinates</strong> (outside the region or <code>NA</code>).</li>
-</ul>
 <p>The bar chart shows:</p>
 <ul>
 <li><strong>98.5%</strong> of records have valid latitude–longitude pairs.Only <strong>1.5%</strong> are invalid or missing.<br>
 </li>
 <li>When making maps or location summaries, we’ll only use the <strong>valid coordinate subset</strong>. This prevented us from plotting points that are clearly wrong (like locations outside of NYC or at (0, 0)).</li>
 </ul>
-<section id="zip-code-quality" class="level4" data-number="2.4.0.1">
-<h4 data-number="2.4.0.1" class="anchored" data-anchor-id="zip-code-quality"><span class="header-section-number">2.4.0.1</span> ZIP Code Quality</h4>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -789,17 +734,15 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"ZIP Code Quality Summary"</span>,</span>
-<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Distribution of valid, invalid, and missing ZIP codes"</span>,</span>
-<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of Records"</span></span>
-<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">15</span>) <span class="sc">+</span></span>
-<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
-<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">18</span>),</span>
-<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">13</span>)</span>
-<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Zip Code Category"</span>,</span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of Records"</span></span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>) <span class="sc">+</span></span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">18</span>)</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -822,14 +765,7 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>zip_num)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Performing a similar quality check for ZIP codes by comparing each <code>incident_zip</code> to a list of valid NYC ZIP codes and allowing for missing values. The bar chart summarizes counts and percentages:</p>
-<ul>
-<li><strong>6,610,015 records (99.0%)</strong> have a valid NYC ZIP code.<br>
-</li>
-<li><strong>65,132 records (1.0%)</strong> have missing ZIP codes.<br>
-</li>
-<li>Only <strong>88 records (0.0%)</strong> have clearly invalid ZIP codes.</li>
-</ul>
+<p>Performing a similar quality check for ZIP codes by comparing each <code>incident_zip</code> to a list of valid NYC ZIP codes and allowing for missing values.</p>
 <p><strong>Cleaning decision.</strong></p>
 <ul>
 <li>Records with invalid ZIPs were treated as data errors and effectively ignored in ZIP-level summaries.</li>
@@ -845,7 +781,6 @@ When is the 311 system under the most pressure, and how do backlog and resolutio
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

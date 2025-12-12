@@ -26,7 +26,7 @@ theme_report <- function(base_size = 13) {
     theme(
       panel.grid.minor = element_blank(),
       panel.grid.major = element_line(color = "grey90", linewidth = 0.3),
-      plot.title       = element_text(face = "bold", hjust = 0.5),
+      plot.title       = element_text(face = "bold", size=13,hjust = 0.5),
       plot.subtitle    = element_text(hjust = 0.5, size = 11),
       axis.title.x     = element_text(margin = margin(t = 8)),
       axis.title.y     = element_text(margin = margin(r = 8)),
@@ -36,8 +36,8 @@ theme_report <- function(base_size = 13) {
 }
 
 ``` 
-## How many complaints are received over time? which months are busiest?
-```{r fig.width=14, fig.height=7}
+## How many complaints are received over time? Which months are the busiest?
+```{r}
 df_clean_final <- readRDS("df_clean_final.rds")
 complaints <- df_clean_final |>
   mutate(
@@ -67,7 +67,6 @@ plot3 <- ggplot(complaints_summary,
   scale_color_brewer(palette = "Dark2", name = "Year") +
   labs(
     title = "Complaint Trends Across Months",
-    subtitle = "Monthly comparison of complaints in 2023 and 2024",
     x = "Month",
     y = "Total Complaints"
   ) +
@@ -271,16 +270,13 @@ and cluttered.
 - **Manhattan** is particularly noise-heavy, which matches expectations for a dense, mixed-use borough with late-night activity.
 - **Staten Island** shows relatively more *Street and Traffic Conditions* and *Vehicle and Parking* complaints, consistent with a more car-reliant area.  
 - Buckets like *Pests and Animals* or *Utilities and Power* appear as small but visible shares everywhere; the dot plot keeps them from disappearing into an “Other” bucket.
-##
 
 
-We plotted this as an **area chart** over the full time window.
-
-## What is the backlog over time? is it growing or shrinking?
+## What is the backlog of complaints over time? Is it growing or shrinking?
 To quantify how “caught up” the city is, we approximated a **daily backlog**:
 
 > backlog(date) ≈ cumulative complaints created − cumulative complaints closed.
-```{r backlog, fig.width=14, fig.height=7}
+```{r backlog}
 
 
 df <- df_clean_final   
@@ -333,7 +329,7 @@ p_backlog <- ggplot(backlog, aes(x = date, y = open_backlog)) +
   geom_area(alpha = 0.7) +
   geom_line(linewidth = 0.4) +
   scale_y_continuous(
-    name = "Open cases (backlog)",
+    name = "Cumulative count of cases ",
     labels = label_number(scale_cut = cut_short_scale(), accuracy = 0.1)
   ) +
   scale_x_date(
@@ -342,15 +338,10 @@ p_backlog <- ggplot(backlog, aes(x = date, y = open_backlog)) +
     date_labels = "%b %Y"
   ) +
   labs(
-    title    = "Backlog over time (system stress)",
-    subtitle = "Number of open cases each day; different from resolution time",
-    y="Time (months)",
+    title    = "Cumulative Backlog of Open 311 Complaints Over Time",
+    y="Time (months)"
   ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.minor = element_blank()
-  )
+  theme_report()
 
 p_backlog
 ```
@@ -362,7 +353,7 @@ p_backlog
 - There are short flat spots and small dips, but no long period where the city clearly catches up; by early 2025, the estimated backlog is near the 300k mark.  
 - This means that even if individual cases close in reasonable time, **new complaints** have been arriving faster than they are resolved , leaving a growing stock of open work. The backlog plot is our main evidence that the 311 system is **under sustained pressure** rather than just dealing with a one-off spike.
 
-## How long are complaints open? which types take the longest to resolve?
+## How long are complaints open? Which types take the longest to resolve?
 ```{r fig.width=14, fig.height=7}
 # 1) Reference date = latest date in the data (same as before)
 ref_date <- df_clean_final |>
@@ -431,12 +422,6 @@ ggplot(age_comp_by_bucket,
   scale_fill_brewer(palette = "Blues", name = "Age band") +
   labs(
     title = "Open Cases: Backlog Age Composition by Complaint Bucket",
-    subtitle = paste(
-      "Currently open complaints (status ≠ 'Closed'); age is days since creation\n",
-      "up to", format(ref_date, " %b %d, %Y"),
-      ". Bars show the proportion of open cases in each age band.",
-      sep = ""
-    ),
     x = "Complaint bucket",
     y = "Share of open complaints"
   ) +
@@ -469,7 +454,7 @@ df_viz <- df_clean_final |>
   mutate(
     year = year(created_date),
     month = floor_date(created_date, "month"),
-    status_clean = ifelse(status == "", NA, status)
+    status_clean = ifelse(status == "" | status == "Closed", NA, status)
   )
 
 df_alluvial <- df_viz |>
@@ -487,12 +472,11 @@ ggplot(
   )
 ) +
   geom_alluvium(aes(fill = complaint_bucket), width = 1/10, alpha = 0.8) +
-  geom_stratum(width = 1/10) +
+  geom_stratum(width=1/5,na.rm = TRUE,show.legend = TRUE) +
   geom_label(
     stat = "stratum",
     aes(label = after_stat(stratum)),
-    size = 3,
-    fill = "white"
+    size = 3
   ) +
   scale_x_discrete(
     limits = c("Year", "Complaint Type", "Status"),
@@ -501,7 +485,6 @@ ggplot(
   scale_y_continuous(labels = scales::comma) +
   labs(
     title = "Complaint Flow: Year → Complaint Type → Final Status",
-    subtitle = "How complaints evolve from originating year to type to closure state",
     y = "Number of Complaints",
     x = ""
   ) +
@@ -521,17 +504,6 @@ ggplot(
 
 ```{r}
 
-
-theme_report <- function() {
-  theme_minimal(base_size = 13) +
-    theme(
-      legend.position = "bottom",
-      plot.title = element_text(face = "bold", size = 18),
-      plot.subtitle = element_text(size = 12),
-      axis.title = element_text(face = "bold"),
-      panel.grid.minor = element_blank()
-    )
-}
 
 df <- df_clean_final |>
   mutate(
@@ -558,7 +530,7 @@ df <- df_clean_final |>
 ## How can people contact 311? which channel is preferred when?
  How people submit complaints: ONLINE, PHONE, MOBILE, and OTHER.For each time-of-day shift (Late Night, Morning, Afternoon, Evening), we calculated each channel’s **share of monthly complaints** and plotted these as **line charts in a 2×2 facet layout**.
 
-```{r, fig.width=14, fig.height=7}
+```{r}
 
 library(dplyr)
 library(ggplot2)
@@ -729,7 +701,7 @@ discrete_scale <- list(
   
 fig_parcats <- plot_ly(
   type = "parcats",
-  width = 1100, height = 650,
+  width = 1600, height = 800,
   arrangement = "freeform",
   dimensions = list(
     list(label = "Borough",        values = d_counts$borough),
@@ -894,7 +866,7 @@ addr_plot <- df_clean_final %>%
   )
 
 # Single combined scatter plot (no facet)
-ggplot(addr_plot, aes(x = n_complaints, y = median_days, color = borough)) +
+ggplot(addr_plot, aes(x = n_complaints, y = median_days)) +
   geom_point(size = 2.2, alpha = 0.8) +
   scale_x_log10(
   limits = c(20, 1000),    # widen range beyond your data
@@ -903,12 +875,21 @@ ggplot(addr_plot, aes(x = n_complaints, y = median_days, color = borough)) +
 ) +
   labs(
     title = "Chronic Hotspots: Complaint Volume vs Resolution Speed",
-    subtitle = "Each point represents a chronic address (≥ 30 complaints), colored by borough.",
-    x = "Number of complaints at address (log scale)",
+    x = "Number of complaints at Boroug (log scale)",
     y = "Median days to closure (within 60 days)",
     color = "Borough"
   ) + theme_report() 
-  ```
+```
+Observations:
+This chart is designed to highlight **persistent trouble spots** where complaint volumes are high and resolution times vary significantly. The use of a **logarithmic x-axis** allows both moderately busy and highly problematic addresses to appear in the same visual frame, without letting the most extreme values dominate.
+
+Several key insights emerge:
+
+- **High-frequency complaint locations** (toward the right of the x-axis) generally show **shorter median resolution times**, suggesting that repeatedly reported sites are often monitored more actively by response teams.  
+- **Scattered high-delay outliers** in each borough (points above 200 days) indicate addresses where complex cases, repeated inspections, or inter-agency coordination might slow closure.  
+- The concentration of points near the baseline (below 60 days) reinforces that the majority of chronic addresses are eventually closed within the targeted time window.
+
+
 ## Which agency has faster resolution time?##
 ```{r}
 df_clean <- df_clean_final |>

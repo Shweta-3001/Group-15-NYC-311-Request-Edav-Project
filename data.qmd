@@ -3,18 +3,6 @@
 
 New York City's 311 system is how, residents let the city know about issues in their communities, such as noise, heating problems, trash, and illegal parking etc. Each entry in the 311 data represents a moment when someone was concerned enough to reach out to the city for assistance.
 
-In this project, we analyze two years of NYC 311 complaint data to answer questions about:
-
-1. **What are New Yorkers worried about?**  
-   How do the types of complaints differ by **location** (e.g., borough, location type) and by **reporting channel** (phone, online, mobile)?
-
-2. **How do complaints get handled from start to finish?**  
-   What does the journey look like from the time a complaint is created until it is closed, and how do status and resolution patterns vary across complaint types and agencies?
-
-3. **How busy is the system, and where are the main slowdowns?**  
-   When is the 311 system under the most pressure, and how do backlog and resolution times reveal operational bottlenecks?
-
-These questions guide the structure of the analysis and the choice of visualizations throughout the report.
 
 ##  Data Source and Scope
 
@@ -73,20 +61,20 @@ Each row corresponds to a single 311 complaint and includes the following groups
 - `closed_date`: when the complaint was closed (if ever)  
 - `resolution_action_updated_date`: when a resolution action was logged  
 
-#### Categorical Descriptors
+### Categorical Descriptors
 
 - `agency`, `agency_name`  
 - `complaint_type` and a higher-level `complaint_bucket` (custom grouping)  
 - `descriptor` (more detailed description of the issue)  
 - `status` (e.g., `"Closed"`, `"Assigned"`, `"In Progress"`)
 
-#### Location Information
+### Location Information
 
 - `borough`, `incident_zip`, `incident_address`  
 - `location_type` (e.g., `"RESIDENTIAL BUILDING"`, `"Street/Sidewalk"`)  
 - `latitude`, `longitude`  
 
-#### Channel and Resolution
+### Channel and Resolution
 
 - `open_data_channel_type` (e.g., `ONLINE`, `PHONE`, `MOBILE`, `OTHER`)  
 - `resolution_description` and `resolution_action` fields  
@@ -109,7 +97,6 @@ arrange(desc(MissingCount))
 print(sorted_table)
 ```
 
-**Top Columns by Missingness Rate**
 
 ```{r  missing-top25, fig.width=12, fig.height=8}
 
@@ -153,8 +140,7 @@ p_missing <- ggplot(top_missing_rate,
   ) +
   labs(
     title = "Top Columns by Missingness Rate",
-    subtitle = "Showing the 25 columns with the highest proportion of missing values",
-    x = NULL,
+    x = "Features",
     y = "Missingness rate"
   ) +
   theme_minimal(base_size = 13) +
@@ -180,6 +166,7 @@ cols_to_drop_by_missing <- miss_by_col_all |>
 The first plot shows the **25 columns with the highest proportion of missing values**. Each bar is a column, ordered from most to least missing, and the color scale encodes the missingness rate.
 
 Key observations:
+
 - Several columns have **almost complete missingness (≈ 95–100%)**, including  
   `taxi_company_borough`, `road_ramp`, `bridge_highway_direction`, `bridge_highway_name`,  
   `bridge_highway_segment`, and `taxi_pick_up_location`.
@@ -187,7 +174,6 @@ Key observations:
 - A second tier of columns (e.g., `intersection_street_1`, `intersection_street_2`, `cross_street_1`, `cross_street_2`) has **moderate missingness** (roughly 25–40%), typically for records where complaints do not occur at an intersection.
  We decided to remove **extreme missingness** columns from final dataframe, which will add noise and complexity without contributing to the main objective of the project and columns with **moderate missingness** but high potential value were kept for further analysis.
 
-**Heatmap of Missing Data (Sampled Rows)**
 
 ```{r heatmap fig-width: 12,fig-height: 8 }
 set.seed(42)
@@ -209,61 +195,41 @@ ggplot(missing_long, aes(x = Column, y = RowIndex, fill = IsMissing)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 To complement the summary bar chart, we also visualized missingness **row by row** for a random sample of records. In this heatmap:
+
 - Some columns form **solid vertical red bands**, meaning they are missing for *almost all* rows which correspond to the heavily missing taxi/bridge fields seen in the previous plot.
 - Other columns show **stripe-like patterns**, where only some rows are missing (e.g., `closed_date` for still-open complaints).
 - Core analytical fields such as `created_date`, `complaint_type`, and `borough` appear almost entirely white, confirming that they are reliable. 
 
 ## Focusing on Key Categorical Variables
 
-**Borough Distribution of 311 Complaints**
 
 ```{r borough fig-width: 12,fig-height: 8 }
 library(dplyr)
 library(ggplot2)
 library(scales)
 
-valid_boros <- c("MANHATTAN", "BROOKLYN", "QUEENS", "BRONX", "STATEN ISLAND")
-
-df_clean_final <- combined |>
-  filter(borough %in% valid_boros)
 
 # Borough counts on cleaned data
-borough_counts <- df_clean_final |>
+borough_counts <- combined |>
   count(borough, name = "n") |>
   mutate(
     share = n / sum(n),
-    # nice index label
-    boro_label = paste0(row_number(), ". ", borough),
-    # text shown on the bar: comma count + %
-    label_text = paste0(comma(n), " (", percent(share, accuracy = 0.1), ")")
+    label_text = paste0(comma(n), " (", percent(share, accuracy = 0.05), ")")
   ) |>
-  arrange(desc(n)) |>
-  mutate(
-    boro_label = factor(boro_label, levels = rev(boro_label))
-  )
+  arrange(desc(n))
 
 ggplot(borough_counts,
-       aes(x = boro_label, y = n, fill = share)) +
-  geom_col(width = 0.7) +
-  geom_text(
-    aes(label = label_text),
-    hjust = -0.05, size = 3.5
-  ) +
-  coord_flip(clip = "off") +
+       aes(x = reorder(borough, n), y = n)) +
+  geom_col(width = 0.7, fill = "#1b9e77") +
+  geom_text(aes(label = label_text), vjust = -0.5, size = 4) +
   scale_y_continuous(
-    labels = scales::comma,                     # <-- commas
-    expand = expansion(mult = c(0, 0.30))       # extra room for labels
-  ) +
-  scale_fill_viridis_c(
-    option = "C",
-    direction = -1,
-    labels = scales::percent_format(accuracy = 1),
-    name = "Share of\ncomplaints"
+    labels = scales::comma,
+    breaks = scales::pretty_breaks(n = 8),
+    expand = expansion(mult = c(0, 0.15))
   ) +
   labs(
     title = "Borough Distribution of 311 Complaints",
-    subtitle = "Indexed by frequency; labels show count (comma separated) and percent of total",
-    x = NULL,
+    x = "NYC Borough",
     y = "Number of complaints"
   ) +
   theme_minimal(base_size = 13) +
@@ -277,16 +243,9 @@ ggplot(borough_counts,
   )
 
 ```
- The horizontal bar chart shows both the raw counts and the percentage share for each borough, ordered by frequency:
-
-- **Brooklyn:** 2,047,219 complaints (30.7%)  
-- **Queens:** 1,604,444 complaints (24.0%)  
-- **Manhattan:** 1,408,383 complaints (21.1%)  
-- **Bronx:** 1,365,908 complaints (20.5%)  
-- **Staten Island:** 249,281 complaints (3.7%)
-
 Interpretation:
 
+-Unspecified boroughs ~ 8000 complaints (0.1%) were excluded in final data.
 - Brooklyn and Queens together account for **more than half** of all 311 complaints, which is broadly consistent with their larger populations and geographic size.
 - Staten Island contributes a comparatively small share of complaints (3.7%), reflecting both its smaller population and possibly different usage patterns of 311.
 
@@ -296,6 +255,11 @@ This plot acts as a **sanity check** that the dataset reflects known patterns of
 
 ```{r}
 #label
+valid_boros <- c("MANHATTAN", "BROOKLYN", "QUEENS", "BRONX", "STATEN ISLAND")
+
+df_clean_final <- combined |>
+  filter(borough %in% valid_boros)
+
 df_clean_final <- df_clean_final |>
   dplyr::select(
     unique_key, created_date, closed_date, resolution_action_updated_date,
@@ -345,17 +309,6 @@ critical_cols <- c("location_type", "complaint_type", "borough")
 plot_missing(df0[critical_cols])
 
 ```
-To ensure that the main categorical variables used throughout the analysis were stable, we examined the joint missingness pattern for three key fields:
-
-- `borough`  
-- `complaint_type`  
-- `location_type`
-
-The pattern plot has:
-
-- A bar at the top showing **% rows missing** for each variable.
-- A matrix in the center indicating which combinations of missing/present occur.
-- A bar on the right showing how common each pattern is.
 
 Main findings:
 
@@ -371,7 +324,6 @@ Main findings:
 
 Many of the most interesting 311 questions are spatial (Which neighborhoods complain the most? Where are issues slowest to resolve?), so we checked the quality of the geographic fields before using them.
 
-**Latitude–Longitude Validity**
 
 ```{r ll fig-width: 12,fig-height: 8 }
 library(dplyr)
@@ -406,8 +358,7 @@ ggplot(geo_summary, aes(x = label, y = pct, fill = label)) +
   scale_fill_manual(values = c("#1b9e77", "#d95f02")) +
   labs(
     title = "Geolocation Validity of 311 Records",
-    subtitle = "Latitude–longitude checked against the NYC bounding box",
-    x = NULL,
+    x = "Geolocation Status",
     y = "% of Records",
     fill = NULL
   ) +
@@ -418,17 +369,11 @@ ggplot(geo_summary, aes(x = label, y = pct, fill = label)) +
   )
 
 ```
-In the above plot we classified each record as:
-
-- having **valid NYC coordinates**, or  
-- having **invalid or missing coordinates** (outside the region or `NA`).
-
 The bar chart shows:
 
 - **98.5%** of records have valid latitude–longitude pairs.Only **1.5%** are invalid or missing.  
 - When making maps or location summaries, we'll only use the **valid coordinate subset**. This prevented us from plotting points that are clearly wrong (like locations outside of NYC or at (0, 0)).
 
-#### ZIP Code Quality
 
 ```{r zip fig-width: 12,fig-height: 8 }
 library(dplyr)
@@ -475,16 +420,14 @@ ggplot(df_zip, aes(x = reorder(zip_category, -n), y = n, fill = zip_category)) +
   
   labs(
     title = "ZIP Code Quality Summary",
-    subtitle = "Distribution of valid, invalid, and missing ZIP codes",
-    x = NULL,
+    x = "Zip Code Category",
     y = "Number of Records"
   ) +
   
-  theme_minimal(base_size = 15) +
+  theme_minimal(base_size = 13) +
   theme(
     legend.position = "none",
-    plot.title = element_text(face = "bold", size = 18),
-    plot.subtitle = element_text(size = 13)
+    plot.title = element_text(face = "bold", size = 18)
   )
 
 df_clean <- df_clean_final %>%
@@ -500,11 +443,7 @@ df_clean <- df_clean_final %>%
 
 
 ```
-Performing a similar quality check for ZIP codes by comparing each `incident_zip` to a list of valid NYC ZIP codes and allowing for missing values. The bar chart summarizes counts and percentages:
-
-- **6,610,015 records (99.0%)** have a valid NYC ZIP code.  
-- **65,132 records (1.0%)** have missing ZIP codes.  
-- Only **88 records (0.0%)** have clearly invalid ZIP codes.
+Performing a similar quality check for ZIP codes by comparing each `incident_zip` to a list of valid NYC ZIP codes and allowing for missing values.
 
 **Cleaning decision.**
 
