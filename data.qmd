@@ -221,7 +221,6 @@ borough_counts <- combined |>
 ggplot(borough_counts,
        aes(x = reorder(borough, n), y = n)) +
   geom_col(width = 0.7, fill = "#1b9e77") +
-  geom_text(aes(label = label_text), vjust = -0.5, size = 4) +
   scale_y_continuous(
     labels = scales::comma,
     breaks = scales::pretty_breaks(n = 8),

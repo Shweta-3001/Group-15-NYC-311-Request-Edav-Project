@@ -277,7 +277,7 @@ and cluttered.
 To quantify how “caught up” the city is, we approximated a **daily backlog**:
 
 > backlog(date) ≈ cumulative complaints created − cumulative complaints closed.
-```{r backlog}
+```{r fig.width=12, fig.height=8}
 
 
 df <- df_clean_final   
@@ -355,7 +355,7 @@ p_backlog
 - This means that even if individual cases close in reasonable time, **new complaints** have been arriving faster than they are resolved , leaving a growing stock of open work. The backlog plot is our main evidence that the 311 system is **under sustained pressure** rather than just dealing with a one-off spike.
 
 ## How long are complaints open? Which types take the longest to resolve?
-```{r fig.width=14, fig.height=7}
+```{r fig.width=14, fig.height=8}
 # 1) Reference date = latest date in the data (same as before)
 ref_date <- df_clean_final |>
   mutate(
@@ -448,7 +448,7 @@ Each band’s thickness represents the number of complaints flowing along that p
 Only non-closed complaints are shown, since closed cases have exited the system.
 
 
-```{r}
+```{r fig.width=12, fig.height=8}
 
 # Prepare alluvial data
 df_viz <- df_clean_final |>
@@ -531,7 +531,7 @@ df <- df_clean_final |>
 ## How can people contact 311? which channel is preferred when?
  How people submit complaints: ONLINE, PHONE, MOBILE, and OTHER.For each time-of-day shift (Late Night, Morning, Afternoon, Evening), we calculated each channel’s **share of monthly complaints** and plotted these as **line charts in a 2×2 facet layout**.
 
-```{r}
+```{r fig.width=12, fig.height=8}
 
 library(dplyr)
 library(ggplot2)
@@ -662,7 +662,7 @@ For each location, we computed the **share of its complaints** belonging to each
 plotted this as a **heatmap** with percentages printed on the tiles.
 
 
-```{r label: heatmap-location-complaint-better, fig-width: 12, fig-height: 7}
+```{r label: heatmap-location-complaint-better, fig-width: 12, fig-height: 8}
 
 
 df1 <- df_clean_final |>
@@ -744,7 +744,7 @@ sanitation issues.
 and cleanliness problems.
 
 ## What is the volume of complaints received? How quickly are they resolved?##
-```{r}
+```{r fig.width=12, fig.height=8}
 addr_plot <- df_clean_final %>%
   mutate(
     days_to_close = as.numeric(as.Date(closed_date) - as.Date(created_date))
@@ -789,7 +789,7 @@ Several key insights emerge:
 
 
 ## Which agency has faster resolution time?##
-```{r}
+```{r fig.width=12, fig.height=8}
 df_clean <- df_clean_final |>
   mutate(
     created_date = as.POSIXct(created_date),
@@ -862,7 +862,7 @@ df3 <- df_clean_final |>
   ))
 ```
 
-```{r label: action-taxonomy-location,fig-height: 7 }
+```{r label: action-taxonomy-location,fig.height= 8, fig.width= 12}
 
 # Chunk 2: plot (uses df3 from above)
 top_loc <- df3 |> count(location_type, sort = TRUE) |> slice_head(n = 10) |> pull(location_type)
