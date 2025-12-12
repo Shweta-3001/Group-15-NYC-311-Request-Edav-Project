@@ -1,10 +1,11 @@
-# 1. Introduction
+# Introduction
 
 New York City operates on an immense scale, like millions of residents who depend daily on public services which keeps the city running. With such a complex infrastructure mistakes are bound to happen. The **311 service request system** serves as the city’s non-emergency channel, capturing how residents experience and report those issues. Each ticket, call, or update represents a snapshot of the city’s response in real time.
 
 The motivation for this project came from simple question: *What can 311 data reveal about how New Yorkers interact with their city?* We aimed to discover patterns in complaint behavior, agency response, identifying which issues dominate, how quickly they are resolved, and where lack of efficiency is there across boroughs and complaint types.  
 
 Few guiding questions shaped our exploration:
+
 1. **What are New Yorkers worried about?**  
    How do the types of complaints differ by **location** (e.g., borough, location type) and by **reporting channel** (phone, online, mobile)?
 
